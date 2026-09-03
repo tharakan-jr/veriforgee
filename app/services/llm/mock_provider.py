@@ -18,12 +18,12 @@ class MockLLMProvider(LLMProvider):
 
         if "credential" in title or "secret" in title or "password" in title:
             credential_pattern = re.compile(
-                r"(?im)^(\s*)(api_key|secret|password|token)\s*=\s*([\"'])[^\"']+\3\s*$"
+                r"(?im)^(\s*)([a-zA-Z_]\w*(?:api_key|secret|password|token|pwd)\w*)\s*=\s*([\"'])[^\"']+\3\s*$"
             )
 
             def replace_credential(match: re.Match[str]) -> str:
                 variable_name = match.group(2)
-                return f'{match.group(1)}{variable_name} = os.environ["{variable_name.upper()}"]'
+                return f'{match.group(1)}{variable_name} = os.environ.get("{variable_name.upper()}", "")'
 
             fixed_code = credential_pattern.sub(replace_credential, code)
             if fixed_code != code:
@@ -98,15 +98,24 @@ class MockLLMProvider(LLMProvider):
                     continue
 
                 query_name = match.group("name")
+                fixed_query = "".join(sql_parts)
+                parameter_tuple = f"({', '.join(parameters)}{',' if len(parameters) == 1 else ''})"
+
                 execute_pattern = re.compile(
                     rf"(?P<prefix>\.execute\(\s*{re.escape(query_name)})(?P<suffix>\s*\))"
                 )
                 execute_match = execute_pattern.search(code, match.end())
                 if not execute_match:
+                    replacement_query = f'{match.group("indent")}{query_name} = {json.dumps(fixed_query)}  # Parameterized placeholder; bind {parameter_tuple} in execute()'
+                    fixed_code = (
+                        code[:match.start()]
+                        + replacement_query
+                        + code[match.end():]
+                    )
+                    if fixed_code != code:
+                        return fixed_code
                     continue
 
-                fixed_query = "".join(sql_parts)
-                parameter_tuple = f"({', '.join(parameters)}{',' if len(parameters) == 1 else ''})"
                 replacement_query = f'{match.group("indent")}{query_name} = {json.dumps(fixed_query)}'
                 fixed_code = (
                     code[:match.start()]
@@ -150,7 +159,7 @@ class MockLLMProvider(LLMProvider):
             findings.append({
                 "severity": "critical",
                 "title": "Hardcoded credential",
-                "category": "security",
+                "category": "secrets",
                 "description": "A credential or secret appears to be stored directly in source code.",
                 "location": f"line {cred_line}",
                 "why_it_matters": "Anyone who gains access to the source repository may obtain the secret credential.",
@@ -173,7 +182,7 @@ class MockLLMProvider(LLMProvider):
             findings.append({
                 "severity": "high",
                 "title": "Unsafe code execution",
-                "category": "security",
+                "category": "command_injection",
                 "description": "Direct use of dynamic execution functions like eval() or exec().",
                 "location": f"line {eval_line}",
                 "why_it_matters": "Executing dynamic code string input can allow arbitrary remote code execution.",

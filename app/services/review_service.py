@@ -82,10 +82,13 @@ class ReviewService:
                 prompt=user_prompt,
                 system_prompt=SYSTEM_PROMPT
             )
-            return self._parse_llm_output(raw_response)
+            response = self._parse_llm_output(raw_response)
         except Exception as e:
             logger.error(f"LLM Provider execution failed: {e}")
-            return self._build_fallback_response(f"Review engine encountered provider error: {str(e)}")
+            response = self._build_fallback_response(f"Review engine encountered provider error: {str(e)}")
+
+        self._ground_findings(response.findings, artefact)
+        return response
 
     def _build_prompt(
         self,
@@ -218,3 +221,31 @@ class ReviewService:
             summary="Review completed with system notices.",
             findings=[fallback_finding]
         )
+
+    def _ground_findings(self, findings: List[Finding], snippet: str) -> None:
+        """
+        Ground findings using the deterministic VeriForge Grounding Layer.
+        Never fabricates evidence; attaches official CWE and OWASP standards when confidence meets threshold.
+        """
+        try:
+            from app.grounding.grounder import ground_finding
+            for f in findings:
+                if f.evidence:
+                    continue
+                # Clean code or system fallback findings don't need grounding search
+                if f.severity == SeverityEnum.INFO and ("clear" in f.title.lower() or "note" in f.title.lower()):
+                    continue
+
+                keywords = [f.title]
+                if f.description:
+                    keywords.extend([w for w in f.description.split() if len(w) >= 3])
+
+                ground_res = ground_finding(
+                    category=f.category,
+                    keywords=keywords,
+                    snippet=snippet
+                )
+                f.evidence = ground_res.model_dump()
+        except Exception as exc:
+            logger.warning(f"Grounding layer execution skipped or failed: {exc}")
+

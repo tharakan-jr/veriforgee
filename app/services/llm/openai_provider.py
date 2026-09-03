@@ -40,3 +40,50 @@ class OpenAILLMProvider(LLMProvider):
             response.raise_for_status()
             data = response.json()
             return data["choices"][0]["message"]["content"]
+
+    async def generate_remediation(self, code: str, finding_title: str, language: str = "python") -> str:
+        """
+        Request automated code fix from OpenAI-compatible model.
+        """
+        if not self.api_key:
+            raise ValueError("LLM_API_KEY is not configured for OpenAILLMProvider.")
+
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+
+        system_prompt = (
+            "You are an automated code remediation engine. "
+            "You receive buggy or insecure code and a specific finding. "
+            "Respond with ONLY the raw corrected code snippet. "
+            "Do NOT include markdown backticks (```) or conversational commentary."
+        )
+        prompt = (
+            f"Language: {language}\n"
+            f"Finding: {finding_title}\n\n"
+            f"Code to fix:\n{code}"
+        )
+
+        payload = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.1
+        }
+
+        url = f"{self.base_url}/chat/completions"
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(url, headers=headers, json=payload)
+            response.raise_for_status()
+            data = response.json()
+            content = data["choices"][0]["message"]["content"].strip()
+            # Strip backticks if returned
+            if content.startswith("```"):
+                lines = content.splitlines()
+                if len(lines) >= 2 and lines[-1].startswith("```"):
+                    content = "\n".join(lines[1:-1]).strip()
+            return content

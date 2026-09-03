@@ -2,7 +2,7 @@ import os
 from typing import Optional
 
 from fastapi import FastAPI, APIRouter, HTTPException
-from fastapi.responses import FileResponse, HTMLResponse, Response
+from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -130,25 +130,13 @@ def explain_voice(payload: VoiceExplainRequest):
         ) from exc
 
 
-# Static files mount
+# Static files — served from root so that relative paths in index.html
+# (style.css, app.js, lenis.min.js) resolve correctly without any prefix.
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 
 if os.path.exists(static_dir):
     app.mount(
-        "/static",
-        StaticFiles(directory=static_dir),
+        "/",
+        StaticFiles(directory=static_dir, html=True),
         name="static"
     )
-
-
-@app.get("/", response_class=HTMLResponse)
-def home():
-    """
-    Landing page showcasing VeriForge core review workflow.
-    """
-    index_path = os.path.join(static_dir, "index.html")
-
-    if os.path.exists(index_path):
-        return FileResponse(index_path)
-
-    return "<h1>VeriForge Backend Running</h1>"
