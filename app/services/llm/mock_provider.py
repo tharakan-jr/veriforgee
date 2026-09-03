@@ -1,5 +1,6 @@
 import json
 import re
+import ast
 from typing import List, Dict, Any
 from app.services.llm.base import LLMProvider
 
@@ -49,6 +50,82 @@ class MockLLMProvider(LLMProvider):
             )
             if fixed_code != code:
                 return fixed_code
+
+        if "sql injection" in title or "sql_injection" in title:
+            query_assignment = re.compile(
+                r"(?m)^(?P<indent>\s*)(?P<name>[A-Za-z_]\w*)\s*=\s*(?P<expression>.+)$"
+            )
+            string_token = r'''(?:'[\s\S]*?(?<!\\)'|"[\s\S]*?(?<!\\)")'''
+
+            for match in query_assignment.finditer(code):
+                expression = match.group("expression").strip()
+                if not re.search(r"(?i)\b(select|insert|update|delete)\b", expression):
+                    continue
+                if "+" not in expression:
+                    continue
+
+                terms = re.split(r"\s*\+\s*", expression)
+                if len(terms) < 2:
+                    continue
+
+                sql_parts: List[str] = []
+                parameters: List[str] = []
+                valid_expression = True
+                parameter_boundary = False
+                for term in terms:
+                    term = term.strip()
+                    if re.fullmatch(string_token, term, re.DOTALL):
+                        try:
+                            literal_value = str(ast.literal_eval(term))
+                            if parameter_boundary and literal_value[:1] in {"'", '"'}:
+                                literal_value = literal_value[1:]
+                            sql_parts.append(literal_value)
+                            parameter_boundary = False
+                        except (SyntaxError, ValueError):
+                            valid_expression = False
+                            break
+                    elif re.fullmatch(r"[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*", term):
+                        if sql_parts and sql_parts[-1][-1:] in {"'", '"'}:
+                            sql_parts[-1] = sql_parts[-1][:-1]
+                        sql_parts.append("?")
+                        parameters.append(term)
+                        parameter_boundary = True
+                    else:
+                        valid_expression = False
+                        break
+
+                if not valid_expression or not parameters:
+                    continue
+
+                query_name = match.group("name")
+                execute_pattern = re.compile(
+                    rf"(?P<prefix>\.execute\(\s*{re.escape(query_name)})(?P<suffix>\s*\))"
+                )
+                execute_match = execute_pattern.search(code, match.end())
+                if not execute_match:
+                    continue
+
+                fixed_query = "".join(sql_parts)
+                parameter_tuple = f"({', '.join(parameters)}{',' if len(parameters) == 1 else ''})"
+                replacement_query = f'{match.group("indent")}{query_name} = {json.dumps(fixed_query)}'
+                fixed_code = (
+                    code[:match.start()]
+                    + replacement_query
+                    + code[match.end():]
+                )
+                adjusted_execute_start = execute_match.start() + len(replacement_query) - (match.end() - match.start())
+                adjusted_execute_end = execute_match.end() + len(replacement_query) - (match.end() - match.start())
+                execute_text = fixed_code[adjusted_execute_start:adjusted_execute_end]
+                fixed_code = (
+                    fixed_code[:adjusted_execute_start]
+                    + execute_text[:-1]
+                    + f", {parameter_tuple})"
+                    + fixed_code[adjusted_execute_end:]
+                )
+                if fixed_code != code:
+                    return fixed_code
+
+            return code
 
         raise ValueError(f"No deterministic remediation available for finding: {finding_title}")
 

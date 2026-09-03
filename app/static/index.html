@@ -638,6 +638,8 @@
     .callout-fix {
       background: rgba(16, 185, 129, 0.08);
       border: 1px solid rgba(16, 185, 129, 0.25);
+      max-height: 28rem;
+      overflow-y: auto;
     }
     .callout-fix .callout-header {
       color: var(--sev-info);
@@ -691,6 +693,9 @@
       align-self: flex-start;
       margin-top: 0.3rem;
       box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+      position: sticky;
+      bottom: 0.25rem;
+      z-index: 1;
     }
 
     .btn-apply-fix:hover {
@@ -1512,7 +1517,7 @@
           ? '<span style="color:var(--sev-info); font-size:0.75rem;">✓ Fix already applied to editor</span>'
           : `<button type="button" class="btn-apply-fix" onclick="applyFixCode(${idx})">
                <i data-lucide="check" style="width: 14px; height: 14px;"></i>
-               <span>Apply Fix to Code Editor</span>
+               <span>Replace Fix in Code Editor</span>
              </button>`;
 
         let fixText = `
