@@ -127,6 +127,27 @@ class MockLLMProvider(LLMProvider):
                 "verification_question": "Why is catching generic exceptions without filtering problematic during debugging?"
             })
 
+        # Check 4: SQL query construction through string concatenation
+        sql_line = 1
+        sql_injection_found = False
+        for idx, line in enumerate(lines, start=1):
+            if re.search(r"(?i)\b(select|insert|update|delete)\b.*\+", line):
+                sql_line = idx
+                sql_injection_found = True
+                break
+
+        if sql_injection_found:
+            findings.append({
+                "severity": "high",
+                "title": "SQL injection",
+                "category": "sql_injection",
+                "description": "Untrusted input is concatenated directly into a SQL query.",
+                "location": f"line {sql_line}",
+                "why_it_matters": "An attacker may alter the query and read, change, or delete database data.",
+                "recommendation": "Use parameterized queries with bound values instead of string concatenation.",
+                "verification_question": "Why do parameterized queries prevent user input from changing SQL structure?"
+            })
+
 
         # Fallback check if code seems clean or simple
         if not findings:

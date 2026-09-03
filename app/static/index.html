@@ -1008,7 +1008,7 @@
 
     let currentFindings = [];
     let activeFinding = null;
-    // Per-finding state: { originalCode, proposedFix, fixApplied, verified }
+    // Per-finding state: { originalCode, proposedFix, fixApplied, verified, loading }
     let findingState = {};
 
     // Update char counter
@@ -1137,8 +1137,8 @@
         const data = await response.json();
         currentFindings = data.findings || [];
         const capturedCode = artefact;
-        currentFindings.forEach((_, i) => {
-          findingState[i] = { originalCode: capturedCode, proposedFix: null, fixApplied: false, verified: false };
+        currentFindings.forEach((finding, i) => {
+          findingState[i] = { finding: finding, originalCode: capturedCode, proposedFix: null, fixApplied: false, verified: false, loading: false };
         });
         renderResults(data);
         markWorkflowStep('review');
@@ -1217,6 +1217,9 @@
       let html = `<div class="findings-container">`;
       
       findings.forEach((f, idx) => {
+        const state = findingState[idx] || {};
+        state.finding = f;
+        findingState[idx] = state;
         const sev = (f.severity || 'info').toLowerCase();
         
         html += `
@@ -1320,48 +1323,122 @@
     }
 
     // 3. GROUND STAGE ACTION
-    function toggleGround(idx) {
+    function findGroundingSnippet(finding, code) {
+      const lines = code.split('\n');
+      const locationMatch = (finding.location || '').match(/line\s*(\d+)/i);
+      const locationIndex = locationMatch ? parseInt(locationMatch[1], 10) - 1 : -1;
+      const findingTokens = `${finding.title || ''} ${finding.description || ''}`
+        .toLowerCase()
+        .match(/[a-z_][a-z0-9_]{2,}/g) || [];
+      const ignoredTokens = new Set(['the', 'and', 'for', 'with', 'from', 'this', 'that', 'code', 'appears', 'direct', 'use']);
+      const usefulTokens = [...new Set(findingTokens.filter(token => !ignoredTokens.has(token)))];
+
+      const scoredLines = lines.map((line, lineIndex) => {
+        const lowerLine = line.toLowerCase();
+        const score = usefulTokens.reduce((total, token) => total + (lowerLine.includes(token) ? 1 : 0), 0);
+        return { lineIndex, score };
+      });
+      const bestLine = scoredLines
+        .filter(item => item.score > 0)
+        .sort((left, right) => right.score - left.score)[0];
+      const targetIndex = bestLine ? bestLine.lineIndex : locationIndex;
+
+      if (targetIndex >= 0 && targetIndex < lines.length) {
+        const start = Math.max(0, targetIndex - 1);
+        const end = Math.min(lines.length, targetIndex + 2);
+        return lines.slice(start, end).join('\n');
+      }
+
+      return code;
+    }
+
+    function buildGroundingKeywords(finding, snippet) {
+      const snippetTokens = snippet.match(/[a-z_][a-z0-9_]{2,}/gi) || [];
+      return [...new Set([
+        finding.title,
+        finding.description,
+        ...snippetTokens
+      ].filter(Boolean))];
+    }
+
+    async function toggleGround(idx) {
       const panel = document.getElementById(`panel-ground-${idx}`);
       const btn = document.getElementById(`btn-ground-${idx}`);
-      const finding = currentFindings[idx];
+      const state = findingState[idx] || {};
+      const finding = state.finding || currentFindings[idx];
+
+      if (!finding) {
+        showError('The selected finding is no longer available. Run the review again.');
+        return;
+      }
 
       if (panel.style.display === 'flex') {
         panel.style.display = 'none';
         btn.classList.remove('active');
-      } else {
-        panel.style.display = 'flex';
-        panel.className = 'callout-box callout-ground';
+        return;
+      }
 
-        const codeText = codeEditor.value;
-        const lines = codeText.split('\n');
-        
-        // Extract line number
-        let lineNum = 1;
-        const match = (finding.location || '').match(/line\s*(\d+)/i);
-        if (match) lineNum = parseInt(match[1], 10);
-        
-        const targetLineCode = lines[lineNum - 1] || lines[0] || codeText;
+      if (state.loading) return;
 
-        let groundText = `
-          <div class="callout-header">
-            <i data-lucide="crosshair" style="width: 14px; height: 14px;"></i>
-            <span>Concrete Evidence Grounding</span>
-          </div>
-          <div style="font-size: 0.82rem;">
-            <div><strong>Location:</strong> Line ${lineNum} inside submitted artefact</div>
-            <div class="ground-line-box">Line ${lineNum}: ${escapeHtml(targetLineCode.trim())}</div>
-            <div style="margin-top: 0.35rem; color: var(--text-muted);">
-              <strong>Trigger Evidence:</strong> This line matches pattern detection for ${escapeHtml(finding.title)} (${escapeHtml(finding.category)}).
+      panel.style.display = 'flex';
+      panel.className = 'callout-box callout-ground';
+      panel.innerHTML = '<div style="padding:0.5rem 0; color:var(--text-muted);">Grounding finding against the knowledge base...</div>';
+      btn.classList.add('active');
+      state.loading = true;
+      findingState[idx] = state;
+
+      const code = codeEditor.value;
+      const snippet = findGroundingSnippet(finding, code);
+      const keywords = buildGroundingKeywords(finding, snippet);
+      const locationMatch = (finding.location || '').match(/line\s*(\d+)/i);
+      const lineNum = locationMatch ? parseInt(locationMatch[1], 10) : 1;
+
+      try {
+        const response = await fetch('/ground', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            category: finding.category,
+            keywords: keywords,
+            snippet: snippet
+          })
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.detail || `Grounding service returned status ${response.status}`);
+
+        if (data.grounded) {
+          panel.innerHTML = `
+            <div class="callout-header">
+              <i data-lucide="crosshair" style="width: 14px; height: 14px;"></i>
+              <span>Grounding Result</span>
             </div>
-          </div>
-        `;
-        panel.innerHTML = groundText;
-        btn.classList.add('active');
-        markWorkflowStep('ground');
+            <div style="font-size: 0.82rem; display: flex; flex-direction: column; gap: 0.35rem;">
+              <div><strong>${escapeHtml(data.title)}</strong> · ${escapeHtml(data.rule_id)} · ${escapeHtml(data.cwe)}</div>
+              <div><strong>Evidence:</strong> ${escapeHtml(data.evidence)}</div>
+              <div><strong>Why it applies:</strong> ${escapeHtml(data.why_it_applies)}</div>
+              <div><strong>Remediation:</strong> ${escapeHtml(data.remediation)}</div>
+              <div><strong>Verification:</strong> ${escapeHtml(data.verification)}</div>
+              <div><strong>Source:</strong> ${escapeHtml(data.source?.name || 'Authoritative source')}</div>
+            </div>
+          `;
+          markWorkflowStep('ground');
+          highlightCodeLine(lineNum);
+        } else {
+          panel.innerHTML = `
+            <div class="callout-header">
+              <i data-lucide="circle-alert" style="width: 14px; height: 14px;"></i>
+              <span>Grounding unavailable</span>
+            </div>
+            <div style="font-size: 0.82rem;">${escapeHtml(data.reason || 'Insufficient evidence to establish a reliable rule match.')}</div>
+          `;
+        }
         lucide.createIcons();
-
-        // Highlight line in textarea
-        highlightCodeLine(lineNum);
+      } catch (err) {
+        panel.innerHTML = `<div style="color:var(--sev-high);">${escapeHtml(err.message || 'Unable to ground this finding.')}</div>`;
+      } finally {
+        state.loading = false;
+        findingState[idx] = state;
       }
     }
 
@@ -1379,7 +1456,7 @@
     }
 
     // 4. FIX STAGE ACTION
-    function toggleFix(idx) {
+    async function toggleFix(idx) {
       const panel = document.getElementById(`panel-fix-${idx}`);
       const btn = document.getElementById(`btn-fix-${idx}`);
       const finding = currentFindings[idx];
@@ -1388,17 +1465,47 @@
       if (panel.style.display === 'flex') {
         panel.style.display = 'none';
         btn.classList.remove('active');
-      } else {
-        panel.style.display = 'flex';
-        panel.className = 'callout-box callout-fix';
+        return;
+      }
 
-        // Use the code that was present when Review was run as the canonical "original"
-        const originalCode = state.originalCode || codeEditor.value;
-        // Generate proposed fix only once; reuse if already generated
-        if (!state.proposedFix) {
-          state.proposedFix = generateProposedFixCode(originalCode, finding);
+      if (state.loading) return;
+      panel.style.display = 'flex';
+      panel.className = 'callout-box callout-fix';
+
+      if (!state.proposedFix) {
+        state.loading = true;
+        findingState[idx] = state;
+        panel.innerHTML = '<div style="padding:0.5rem 0; color:var(--text-muted);">Generating proposed remediation...</div>';
+        try {
+          const response = await fetch('/api/v1/fix', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              code: codeEditor.value,
+              finding_id: finding.id,
+              finding_title: finding.title,
+              language: languageSelect.value
+            })
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(data.detail || `Fix service returned status ${response.status}`);
+          state.originalCode = data.original_code;
+          state.proposedFix = data.fixed_code;
+          state.fixExplanation = data.explanation;
+          findingState[idx] = state;
+        } catch (err) {
+          panel.innerHTML = `<div style="color:var(--sev-high);">${escapeHtml(err.message || 'Unable to generate a fix.')}</div>`;
+          state.loading = false;
+          findingState[idx] = state;
+          return;
+        } finally {
+          state.loading = false;
           findingState[idx] = state;
         }
+      }
+
+      {
+        const originalCode = state.originalCode || codeEditor.value;
         const proposedFixCode = state.proposedFix;
 
         const applyLabel = state.fixApplied
@@ -1423,7 +1530,7 @@
             <div class="diff-box diff-proposed">${escapeHtml(proposedFixCode)}</div>
 
             <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">
-              ${escapeHtml(finding.recommendation)}
+              ${escapeHtml(state.fixExplanation || finding.recommendation)}
             </div>
 
             ${applyLabel}
@@ -1431,32 +1538,8 @@
         `;
         panel.innerHTML = fixText;
         btn.classList.add('active');
-        // Do NOT mark workflow step 'fix' yet — only after Apply Fix
         lucide.createIcons();
       }
-    }
-
-    function generateProposedFixCode(code, finding) {
-      const title = (finding.title || '').toLowerCase();
-      
-      if (title.includes('credential') || title.includes('secret') || title.includes('password')) {
-        if (code.includes('password =') || code.includes('api_key =')) {
-          return code
-            .replace(/password\s*=\s*["\'][^"\']+["\']/, 'import os\n\npassword = os.getenv("PASSWORD")')
-            .replace(/api_key\s*=\s*["\'][^"\']+["\']/, 'import os\n\napi_key = os.getenv("API_KEY")');
-        }
-        return `import os\n\n# Loaded safely from environment variable\npassword = os.getenv("PASSWORD")\nprint(password)`;
-      }
-
-      if (title.includes('eval') || title.includes('unsafe code execution')) {
-        return code.replace(/eval\s*\((.*?)\)/g, 'Number($1) /* Safely parse numeric input */');
-      }
-
-      if (title.includes('except')) {
-        return code.replace(/except\s*:/g, 'except Exception as e: # Catch specific exception\n        logging.error(f"Error: {e}")');
-      }
-
-      return `# Refactored code snippet\n${code}`;
     }
 
     function applyFixCode(idx) {
@@ -1496,12 +1579,20 @@
         showError('Apply the proposed fix before verifying.');
         return;
       }
+      if (state.loading) return;
+
+      state.loading = true;
+      findingState[idx] = state;
+      const verifyBtn = document.getElementById(`btn-verify-${idx}`);
+      if (verifyBtn) verifyBtn.disabled = true;
 
       // Always verify the CURRENT editor contents (which holds the applied fix)
-      const fixedCode = codeEditor.value.trim();
+      const fixedCode = codeEditor.value;
 
       if (!fixedCode) {
         showError('Code editor is empty. Cannot run verification.');
+        state.loading = false;
+        if (verifyBtn) verifyBtn.disabled = false;
         return;
       }
 
@@ -1533,7 +1624,7 @@
         }
 
         const data = await response.json();
-        state.verified = true;
+        state.verified = data.is_resolved === true;
         findingState[idx] = state;
 
         let verifyHtml = '';
@@ -1584,6 +1675,10 @@
       } catch (err) {
         if (verifyPanel) verifyPanel.innerHTML = '';
         showError(err.message || 'Failed to verify fix with backend API.');
+      } finally {
+        state.loading = false;
+        findingState[idx] = state;
+        if (verifyBtn) verifyBtn.disabled = false;
       }
     }
 

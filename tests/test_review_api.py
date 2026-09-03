@@ -48,6 +48,29 @@ def test_valid_review_output(client: TestClient):
     assert "recommendation" in finding
     assert "verification_question" in finding
 
+def test_sql_injection_detection(client: TestClient):
+    payload = {
+        "artefact": (
+            "import sqlite3\n\n"
+            "def get_user(username):\n"
+            "    conn = sqlite3.connect('users.db')\n"
+            "    query = \"SELECT * FROM users WHERE username = '\" + username + \"'\"\n"
+            "    return conn.execute(query).fetchone()"
+        ),
+        "language": "python"
+    }
+
+    response = client.post("/api/v1/review", json=payload)
+
+    assert response.status_code == 200
+    findings = response.json()["findings"]
+    sql_finding = next(finding for finding in findings if finding["title"] == "SQL injection")
+    assert sql_finding["severity"] == "high"
+    assert sql_finding["category"] == "sql_injection"
+    assert sql_finding["location"] == "line 5"
+    assert sql_finding["recommendation"]
+    assert sql_finding["verification_question"]
+
 
 # Test 2: Invalid/malformed LLM output handling
 @pytest.mark.asyncio
