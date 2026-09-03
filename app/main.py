@@ -1,7 +1,11 @@
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
+from app.grounding.router import router as grounding_router
+
 app = FastAPI(title="VeriForge", version="0.1.0")
+
+app.include_router(grounding_router, prefix="/ground", tags=["grounding"])
 
 @app.get("/health")
 def health():
