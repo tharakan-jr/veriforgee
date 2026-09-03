@@ -225,7 +225,7 @@ function setStepState(stepEl, status, icon) {
   if (ind) ind.textContent = icon;
 }
 
-function runReviewPipeline(code) {
+async function runReviewPipeline(code) {
   showView("loading");
 
   setStepState(step1, "active", "●");
@@ -234,33 +234,90 @@ function runReviewPipeline(code) {
   setStepState(step4, "pending", "○");
   loadingStageLabel.textContent = "Analyzing your code...";
 
-  // Phase 1 -> 2
-  setTimeout(() => {
+  try {
+    const payload = {
+      artefact: code,
+      language: langSelect.value,
+      context: intentInput.value || ""
+    };
+
     setStepState(step1, "done", "✓");
     setStepState(step2, "active", "●");
     loadingStageLabel.textContent = "Checking security patterns...";
-  }, 320);
 
-  // Phase 2 -> 3
-  setTimeout(() => {
+    const res = await fetch("/api/v1/review", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      throw new Error(`Review API failed with status ${res.status}`);
+    }
+
     setStepState(step2, "done", "✓");
     setStepState(step3, "active", "●");
     loadingStageLabel.textContent = "Finding potential vulnerabilities...";
-  }, 680);
 
-  // Phase 3 -> 4
-  setTimeout(() => {
+    const data = await res.json();
+
     setStepState(step3, "done", "✓");
     setStepState(step4, "active", "●");
     loadingStageLabel.textContent = "Grounding findings with trusted sources...";
-  }, 1020);
 
-  // Final Transition to Results
-  setTimeout(() => {
-    setStepState(step4, "done", "✓");
-    showView("result");
-    resetResultUI();
-  }, 1300);
+    setTimeout(() => {
+      setStepState(step4, "done", "✓");
+      
+      const findings = data.findings || [];
+      metricTotalIssues.textContent = findings.length < 10 ? '0' + findings.length : findings.length;
+
+      let c = 0, h = 0, m = 0, l = 0;
+      let primaryFinding = null;
+
+      findings.forEach(f => {
+        const sev = (f.severity || '').toLowerCase();
+        if (sev === 'critical') c++;
+        else if (sev === 'high') h++;
+        else if (sev === 'medium') m++;
+        else l++;
+
+        if (!primaryFinding) {
+          primaryFinding = f;
+        } else {
+          const rank = {'critical': 4, 'high': 3, 'medium': 2, 'low': 1, 'info': 0};
+          const pRank = rank[(primaryFinding.severity || '').toLowerCase()] || 0;
+          const currRank = rank[sev] || 0;
+          if (currRank > pRank) primaryFinding = f;
+        }
+      });
+
+      metricCritical.textContent = c < 10 ? '0' + c : c;
+      document.getElementById("metric-high").textContent = h < 10 ? '0' + h : h;
+      document.getElementById("metric-medium").textContent = m < 10 ? '0' + m : m;
+      document.getElementById("metric-low").textContent = l < 10 ? '0' + l : l;
+
+      if (primaryFinding) {
+        findingSeverityPill.innerHTML = `<span class="pulse-dot"></span><span>${(primaryFinding.severity || 'INFO').toUpperCase()}</span>`;
+        findingSeverityPill.className = `severity-pill ${(primaryFinding.severity || 'info').toLowerCase()}`;
+        
+        document.getElementById("finding-loc-pill").textContent = primaryFinding.location || 'Unknown Location';
+        findingTitle.textContent = primaryFinding.title || 'Finding';
+        findingPlainExplanation.textContent = primaryFinding.description || 'No description provided.';
+        findingWhyMatters.textContent = primaryFinding.why_it_matters || 'No explanation provided.';
+        findingEvidenceText.textContent = primaryFinding.evidence || 'No evidence provided.';
+        findingFixGuidance.textContent = primaryFinding.recommendation || 'No recommendation provided.';
+        quizQuestionText.textContent = primaryFinding.verification_question || 'Do you understand this issue?';
+      }
+
+      showView("result");
+      resetResultUI();
+    }, 500);
+
+  } catch (err) {
+    console.error(err);
+    errorMessage.textContent = err.message || "The review service was unable to complete the analysis. Please check your connection or try again.";
+    showView("error");
+  }
 }
 
 btnReview.addEventListener("click", () => {
