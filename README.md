@@ -36,6 +36,11 @@ AI has made creating software easier, but judging whether generated output is co
 ├── .github/
 │   ├── ISSUE_TEMPLATE/bug_report.md
 │   └── pull_request_template.md
+├── app/
+│   ├── main.py
+│   └── elevenlabs.py
+├── tests/
+│   └── test_elevenlabs.py
 ├── .env.example
 ├── .gitignore
 ├── docker-compose.yml
@@ -45,21 +50,84 @@ AI has made creating software easier, but judging whether generated output is co
 
 ## Quick start
 
+### Local Development
+
+1. Create and configure environment:
+   ```bash
+   copy .env.example .env   # On Windows
+   # or: cp .env.example .env (Linux/macOS)
+   ```
+2. Run backend dev server:
+   ```bash
+   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   ```
+3. Open `http://localhost:8000` in your browser.
+
 ### Docker
 
 ```bash
 docker compose up --build
 ```
 
-### Local Git workflow
+### Running Tests
 
 ```bash
-git clone <YOUR_GITHUB_REPO_URL>
-cd veriforge
-git checkout -b feature/<short-name>
+python -m unittest discover -s tests -p "test_*.py"
 ```
 
-Make small commits and open a PR before merging into `main`.
+## ElevenLabs Voice Integration
+
+VeriForge includes an optional voice explanation layer powered by ElevenLabs Text-to-Speech to make security and code findings accessible through natural speech.
+
+### 1. Configuration
+
+Copy `.env.example` to `.env` and add your API key:
+
+```bash
+ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
+```
+
+Optional settings:
+```bash
+# Custom Voice ID (defaults to Rachel: 21m00Tcm4TlvDq8ikWAM)
+ELEVENLABS_VOICE_ID=21m00Tcm4TlvDq8ikWAM
+
+# Custom Model (defaults to eleven_multilingual_v2)
+ELEVENLABS_MODEL_ID=eleven_multilingual_v2
+```
+
+> **Security & Graceful Fallback**:
+> - Never commit `.env` to Git. `.gitignore` is preconfigured to prevent this.
+> - ElevenLabs is **strictly optional**. If `ELEVENLABS_API_KEY` is not provided, VeriForge continues operating normally; findings remain 100% visible and interactive.
+> - The API key is securely handled by the backend proxy and is **never** exposed to the browser.
+
+### 2. Example API Requests
+
+#### Check Voice Health / Status:
+```bash
+curl -X GET http://localhost:8000/api/voice/status
+```
+Response:
+```json
+{
+  "status": "ok",
+  "voice": {
+    "configured": true,
+    "available": true,
+    "voice_id": "21m00Tcm4TlvDq8ikWAM",
+    "model_id": "eleven_multilingual_v2"
+  },
+  "detail": "Voice feature enabled and ready."
+}
+```
+
+#### Generate Spoken Finding Audio:
+```bash
+curl -X POST http://localhost:8000/api/voice/explain \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Your database password is directly written inside the source code. Passwords should always be loaded through secure environment variables."}' \
+  --output explanation.mp3
+```
 
 ## Environment variables
 
@@ -82,6 +150,6 @@ Copy `.env.example` to `.env` and add only the keys your implementation actually
 - [ ] Structured finding schema
 - [ ] Grounding / evidence layer
 - [ ] Verification flow
-- [ ] ElevenLabs voice demo
+- [x] ElevenLabs voice demo
 - [ ] Docker smoke test
 - [ ] Final demo script
