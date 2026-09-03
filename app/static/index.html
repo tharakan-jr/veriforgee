@@ -1,0 +1,1601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VeriForge — AI Code Reliability & Security Review</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --bg-card: #0f172a;
+      --bg-card-hover: #131d33;
+      --bg-input: #0b1120;
+      --border-color: #1e293b;
+      --border-accent: #334155;
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --accent-cyan: #06b6d4;
+      --accent-violet: #8b5cf6;
+      --accent-blue: #3b82f6;
+
+      --sev-critical: #f43f5e;
+      --sev-critical-bg: rgba(244, 63, 94, 0.12);
+      --sev-critical-border: rgba(244, 63, 94, 0.35);
+
+      --sev-high: #f97316;
+      --sev-high-bg: rgba(249, 115, 22, 0.12);
+      --sev-high-border: rgba(249, 115, 22, 0.35);
+
+      --sev-medium: #eab308;
+      --sev-medium-bg: rgba(234, 179, 8, 0.12);
+      --sev-medium-border: rgba(234, 179, 8, 0.35);
+
+      --sev-low: #3b82f6;
+      --sev-low-bg: rgba(59, 130, 246, 0.12);
+      --sev-low-border: rgba(59, 130, 246, 0.35);
+
+      --sev-info: #10b981;
+      --sev-info-bg: rgba(16, 185, 129, 0.12);
+      --sev-info-border: rgba(16, 185, 129, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    header {
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding: 0.85rem 2rem;
+    }
+
+    .header-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+    }
+
+    .brand-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(to right, #ffffff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-tag {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      padding: 0.15rem 0.5rem;
+      border-radius: 9999px;
+      background: rgba(6, 182, 212, 0.1);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(6, 182, 212, 0.25);
+    }
+
+    .tagline {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      font-weight: 400;
+      margin-left: 2.75rem;
+    }
+
+    .header-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--sev-info);
+      box-shadow: 0 0 8px var(--sev-info);
+    }
+
+    /* Process Flow Banner */
+    .pipeline-bar {
+      background: #0b1120;
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.6rem 2rem;
+      font-size: 0.78rem;
+    }
+
+    .pipeline-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      color: var(--text-dim);
+    }
+
+    .pipeline-step {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 6px;
+      background: rgba(30, 41, 59, 0.4);
+      color: var(--text-dim);
+      font-weight: 500;
+      transition: all 0.3s;
+    }
+
+    .pipeline-step.active {
+      color: var(--accent-cyan);
+      border: 1px solid rgba(6, 182, 212, 0.4);
+      background: rgba(6, 182, 212, 0.12);
+      box-shadow: 0 0 12px rgba(6, 182, 212, 0.15);
+    }
+
+    .pipeline-step.completed {
+      color: var(--sev-info);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      background: rgba(16, 185, 129, 0.08);
+    }
+
+    .pipeline-arrow {
+      color: var(--border-accent);
+      font-size: 0.7rem;
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      max-width: 1400px;
+      width: 100%;
+      margin: 1.5rem auto;
+      padding: 0 1.5rem;
+    }
+
+    .grid-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    @media (max-width: 1024px) {
+      .grid-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Card Panels */
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    }
+
+    .panel-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(15, 23, 42, 0.6);
+    }
+
+    .panel-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .panel-body {
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* Code Editor Styling */
+    .controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .select-wrapper, .input-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .field-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+    }
+
+    select, input[type="text"] {
+      background: var(--bg-input);
+      border: 1px solid var(--border-accent);
+      color: var(--text-main);
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.85rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    select:focus, input[type="text"]:focus, textarea:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2);
+    }
+
+    .presets-group {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .preset-btn {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid var(--border-accent);
+      color: var(--text-muted);
+      border-radius: 4px;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .preset-btn:hover {
+      background: var(--border-accent);
+      color: var(--text-main);
+    }
+
+    .editor-container {
+      position: relative;
+      background: var(--bg-input);
+      border: 1px solid var(--border-accent);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    textarea.code-editor {
+      width: 100%;
+      height: 360px;
+      background: transparent;
+      border: none;
+      color: #e2e8f0;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.88rem;
+      padding: 1rem;
+      line-height: 1.6;
+      resize: vertical;
+      outline: none;
+      tab-size: 4;
+    }
+
+    .editor-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0.75rem;
+      background: rgba(11, 17, 32, 0.8);
+      border-top: 1px solid var(--border-color);
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    /* Primary Action Buttons */
+    .actions-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .btn-submit {
+      background: linear-gradient(135deg, var(--accent-cyan), #0284c7);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.25);
+      flex: 1;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      filter: brightness(1.1);
+      box-shadow: 0 6px 16px rgba(6, 182, 212, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-clear {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid var(--border-accent);
+      color: var(--text-muted);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .btn-clear:hover {
+      background: var(--border-accent);
+      color: var(--text-main);
+    }
+
+    /* Results Section */
+    .summary-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
+      gap: 0.6rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .summary-badge {
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0.5rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+
+    .summary-count {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .summary-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--text-dim);
+    }
+
+    .badge-critical { color: var(--sev-critical); }
+    .badge-high { color: var(--sev-high); }
+    .badge-medium { color: var(--sev-medium); }
+    .badge-low { color: var(--sev-low); }
+    .badge-info { color: var(--sev-info); }
+
+    /* Finding Card */
+    .findings-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      max-height: 600px;
+      overflow-y: auto;
+      padding-right: 0.3rem;
+    }
+
+    .finding-card {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .finding-card:hover {
+      border-color: var(--border-accent);
+    }
+
+    .finding-card.severity-critical { border-left: 4px solid var(--sev-critical); }
+    .finding-card.severity-high { border-left: 4px solid var(--sev-high); }
+    .finding-card.severity-medium { border-left: 4px solid var(--sev-medium); }
+    .finding-card.severity-low { border-left: 4px solid var(--sev-low); }
+    .finding-card.severity-info { border-left: 4px solid var(--sev-info); }
+
+    .card-header {
+      padding: 0.85rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      background: rgba(30, 41, 59, 0.25);
+    }
+
+    .card-title-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .sev-pill {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      letter-spacing: 0.04em;
+    }
+
+    .sev-pill.critical { background: var(--sev-critical-bg); color: var(--sev-critical); border: 1px solid var(--sev-critical-border); }
+    .sev-pill.high { background: var(--sev-high-bg); color: var(--sev-high); border: 1px solid var(--sev-high-border); }
+    .sev-pill.medium { background: var(--sev-medium-bg); color: var(--sev-medium); border: 1px solid var(--sev-medium-border); }
+    .sev-pill.low { background: var(--sev-low-bg); color: var(--sev-low); border: 1px solid var(--sev-low-border); }
+    .sev-pill.info { background: var(--sev-info-bg); color: var(--sev-info); border: 1px solid var(--sev-info-border); }
+
+    .category-pill, .location-pill {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      background: rgba(30, 41, 59, 0.6);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+    }
+
+    .card-title {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    /* Action bar on cards: [ Explain ] [ Ground ] [ Fix ] [ Verify ] */
+    .card-actions-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 1rem;
+      background: rgba(11, 17, 32, 0.6);
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+    }
+
+    .action-btn {
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid var(--border-accent);
+      color: var(--text-muted);
+      border-radius: 5px;
+      padding: 0.3rem 0.6rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.2s;
+    }
+
+    .action-btn:hover {
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--accent-cyan);
+      border-color: rgba(6, 182, 212, 0.4);
+    }
+
+    .action-btn.active {
+      background: rgba(6, 182, 212, 0.2);
+      color: var(--accent-cyan);
+      border-color: var(--accent-cyan);
+      font-weight: 600;
+    }
+
+    .action-btn.btn-verify-action {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.2));
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: var(--sev-info);
+    }
+
+    .action-btn.btn-verify-action:hover {
+      background: rgba(16, 185, 129, 0.3);
+      color: #fff;
+    }
+
+    .card-body {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .finding-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .callout-box {
+      border-radius: 6px;
+      padding: 0.75rem;
+      font-size: 0.82rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    /* Explain Panel */
+    .callout-explain {
+      background: rgba(139, 92, 246, 0.08);
+      border: 1px solid rgba(139, 92, 246, 0.25);
+    }
+    .callout-explain .callout-header {
+      color: var(--accent-violet);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    /* Ground Panel */
+    .callout-ground {
+      background: rgba(6, 182, 212, 0.08);
+      border: 1px solid rgba(6, 182, 212, 0.25);
+    }
+    .callout-ground .callout-header {
+      color: var(--accent-cyan);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .ground-line-box {
+      background: #060911;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 0.4rem 0.65rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      color: #7dd3fc;
+      margin-top: 0.25rem;
+    }
+
+    /* Fix Panel & Diff */
+    .callout-fix {
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+    .callout-fix .callout-header {
+      color: var(--sev-info);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .diff-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 0.25rem;
+    }
+
+    .diff-box {
+      border-radius: 4px;
+      padding: 0.5rem 0.75rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .diff-current {
+      background: rgba(244, 63, 94, 0.1);
+      border: 1px solid rgba(244, 63, 94, 0.25);
+      color: #fda4af;
+    }
+
+    .diff-proposed {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #6ee7b7;
+    }
+
+    .btn-apply-fix {
+      background: linear-gradient(135deg, var(--sev-info), #059669);
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      padding: 0.4rem 0.85rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.2s;
+      align-self: flex-start;
+      margin-top: 0.3rem;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+    }
+
+    .btn-apply-fix:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    /* Verification Status Box */
+    .verify-result-box {
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-top: 0.5rem;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    .verify-resolved {
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: var(--sev-info);
+    }
+
+    .verify-unresolved {
+      background: rgba(249, 115, 22, 0.12);
+      border: 1px solid rgba(249, 115, 22, 0.35);
+      color: var(--sev-high);
+    }
+
+    /* States */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 2rem;
+      text-align: center;
+      color: var(--text-dim);
+      gap: 0.8rem;
+    }
+
+    .empty-state i {
+      width: 48px;
+      height: 48px;
+      color: var(--border-accent);
+    }
+
+    .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 2rem;
+      gap: 1rem;
+      color: var(--text-muted);
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(6, 182, 212, 0.15);
+      border-top-color: var(--accent-cyan);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error-banner {
+      background: var(--sev-critical-bg);
+      border: 1px solid var(--sev-critical-border);
+      color: var(--sev-critical);
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: #1e293b;
+      color: var(--text-main);
+      border: 1px solid var(--accent-cyan);
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      z-index: 100;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <div class="brand-group">
+        <a href="#" class="brand">
+          <div class="brand-icon">V</div>
+          <span class="brand-title">VeriForge</span>
+          <span class="brand-tag">Security & Reliability</span>
+        </a>
+        <div class="tagline">Review AI-generated code before it reaches production.</div>
+      </div>
+      
+      <div class="header-badge">
+        <span class="status-dot"></span>
+        <span>Backend Ready & Connected</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Process Flow Banner -->
+  <div class="pipeline-bar">
+    <div class="pipeline-container">
+      <div id="stepReview" class="pipeline-step active">
+        <i data-lucide="search" style="width: 14px; height: 14px;"></i>
+        <span>1. REVIEW</span>
+      </div>
+      <span class="pipeline-arrow">➔</span>
+      <div id="stepExplain" class="pipeline-step">
+        <i data-lucide="book-open" style="width: 14px; height: 14px;"></i>
+        <span>2. EXPLAIN</span>
+      </div>
+      <span class="pipeline-arrow">➔</span>
+      <div id="stepGround" class="pipeline-step">
+        <i data-lucide="crosshair" style="width: 14px; height: 14px;"></i>
+        <span>3. GROUND</span>
+      </div>
+      <span class="pipeline-arrow">➔</span>
+      <div id="stepFix" class="pipeline-step">
+        <i data-lucide="wrench" style="width: 14px; height: 14px;"></i>
+        <span>4. FIX</span>
+      </div>
+      <span class="pipeline-arrow">➔</span>
+      <div id="stepVerify" class="pipeline-step">
+        <i data-lucide="check-circle-2" style="width: 14px; height: 14px;"></i>
+        <span>5. VERIFY</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Layout -->
+  <main>
+    <div class="grid-layout">
+      
+      <!-- Left Panel: Input & Controls -->
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <i data-lucide="terminal" style="width: 18px; height: 18px; color: var(--accent-cyan);"></i>
+            Submit AI-Generated Artefact
+          </div>
+          <div class="presets-group">
+            <span class="field-label" style="font-size: 0.68rem;">Samples:</span>
+            <button type="button" class="preset-btn" onclick="loadSample('testcase')">Password</button>
+            <button type="button" class="preset-btn" onclick="loadSample('eval')">Eval</button>
+            <button type="button" class="preset-btn" onclick="loadSample('except')">Except</button>
+            <button type="button" class="preset-btn" onclick="loadSample('safe')">Safe</button>
+          </div>
+        </div>
+
+        <div class="panel-body">
+          
+          <div class="controls-row">
+            <div class="select-wrapper">
+              <label for="languageSelect" class="field-label">Language</label>
+              <select id="languageSelect">
+                <option value="python">Python</option>
+                <option value="javascript">JavaScript / TypeScript</option>
+                <option value="java">Java</option>
+                <option value="cpp">C++</option>
+                <option value="go">Go</option>
+                <option value="rust">Rust</option>
+                <option value="sql">SQL</option>
+                <option value="other">General / Other</option>
+              </select>
+            </div>
+
+            <div class="input-wrapper" style="flex: 1;">
+              <label for="contextInput" class="field-label">Context / Intent (Optional)</label>
+              <input type="text" id="contextInput" placeholder="e.g. Database authentication script">
+            </div>
+          </div>
+
+          <div class="editor-container">
+            <textarea id="codeEditor" class="code-editor" placeholder="// Paste AI-generated code snippet here..." spellcheck="false"></textarea>
+            <div class="editor-footer">
+              <span id="charCount">0 characters</span>
+              <span>Press Ctrl+Enter to Review</span>
+            </div>
+          </div>
+
+          <div class="actions-group">
+            <button id="reviewBtn" class="btn-submit" onclick="submitReview()">
+              <i data-lucide="zap" style="width: 18px; height: 18px;"></i>
+              <span>Review Code</span>
+            </button>
+            <button type="button" class="btn-clear" onclick="clearEditor()" title="Clear editor content">
+              <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+              <span>Clear</span>
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Right Panel: Results & Findings -->
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <i data-lucide="shield-alert" style="width: 18px; height: 18px; color: var(--accent-violet);"></i>
+            Diagnostic Findings & Workflow Actions
+          </div>
+          <span id="statusIndicator" class="field-label" style="text-transform: none; color: var(--text-muted);">Awaiting submission</span>
+        </div>
+
+        <div class="panel-body">
+          
+          <!-- Summary Cards Bar -->
+          <div id="summaryBar" class="summary-bar" style="display: none;">
+            <div class="summary-badge">
+              <span id="cntCritical" class="summary-count badge-critical">0</span>
+              <span class="summary-label">Critical</span>
+            </div>
+            <div class="summary-badge">
+              <span id="cntHigh" class="summary-count badge-high">0</span>
+              <span class="summary-label">High</span>
+            </div>
+            <div class="summary-badge">
+              <span id="cntMedium" class="summary-count badge-medium">0</span>
+              <span class="summary-label">Medium</span>
+            </div>
+            <div class="summary-badge">
+              <span id="cntLow" class="summary-count badge-low">0</span>
+              <span class="summary-label">Low</span>
+            </div>
+            <div class="summary-badge">
+              <span id="cntInfo" class="summary-count badge-info">0</span>
+              <span class="summary-label">Info</span>
+            </div>
+          </div>
+
+          <!-- Error Alert Banner -->
+          <div id="errorBanner" class="error-banner" style="display: none;">
+            <i data-lucide="alert-triangle" style="width: 18px; height: 18px;"></i>
+            <span id="errorMessage">An error occurred during processing.</span>
+          </div>
+
+          <!-- Global Verification Status Container -->
+          <div id="verifyResultContainer"></div>
+
+          <!-- Main Content Area -->
+          <div id="resultsContainer">
+            
+            <!-- Default Empty State -->
+            <div class="empty-state">
+              <i data-lucide="code-2"></i>
+              <p style="font-weight: 600; color: var(--text-main);">No analysis generated yet</p>
+              <p style="font-size: 0.8rem; max-width: 320px;">Paste AI-generated code in the editor on the left and click "Review Code" to run the security review engine.</p>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <div id="toastContainer"></div>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // Elements
+    const codeEditor = document.getElementById('codeEditor');
+    const languageSelect = document.getElementById('languageSelect');
+    const contextInput = document.getElementById('contextInput');
+    const reviewBtn = document.getElementById('reviewBtn');
+    const charCount = document.getElementById('charCount');
+    const resultsContainer = document.getElementById('resultsContainer');
+    const summaryBar = document.getElementById('summaryBar');
+    const errorBanner = document.getElementById('errorBanner');
+    const errorMessage = document.getElementById('errorMessage');
+    const statusIndicator = document.getElementById('statusIndicator');
+    const verifyResultContainer = document.getElementById('verifyResultContainer');
+
+    // Workflow Banner Elements
+    const stepReview = document.getElementById('stepReview');
+    const stepExplain = document.getElementById('stepExplain');
+    const stepGround = document.getElementById('stepGround');
+    const stepFix = document.getElementById('stepFix');
+    const stepVerify = document.getElementById('stepVerify');
+
+    let currentFindings = [];
+    let activeFinding = null;
+    // Per-finding state: { originalCode, proposedFix, fixApplied, verified }
+    let findingState = {};
+
+    // Update char counter
+    codeEditor.addEventListener('input', () => {
+      const len = codeEditor.value.length;
+      charCount.textContent = `${len.toLocaleString()} characters`;
+    });
+
+    // Keyboard shortcut (Ctrl + Enter)
+    codeEditor.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        submitReview();
+      }
+    });
+
+    // Preset Code Samples
+    const samples = {
+      testcase: `password = "mysecret123"\nprint(password)`,
+      eval: `user_input = input("Enter expression: ")\nresult = eval(user_input)\nprint(result)`,
+      except: `def process_data(payload):\n    try:\n        data = parse_json(payload)\n        save_db(data)\n    except:\n        pass`,
+      safe: `def add_numbers(a, b):\n    return a + b\n\nresult = add_numbers(10, 20)\nprint(result)`
+    };
+
+    function loadSample(key) {
+      if (samples[key]) {
+        codeEditor.value = samples[key];
+        codeEditor.dispatchEvent(new Event('input'));
+        languageSelect.value = (key === 'eval') ? 'javascript' : 'python';
+        resetWorkflowSteps();
+      }
+    }
+
+    function clearEditor() {
+      codeEditor.value = '';
+      codeEditor.dispatchEvent(new Event('input'));
+      contextInput.value = '';
+      hideError();
+      resetWorkflowSteps();
+    }
+
+    function showToast(msg) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `<i data-lucide="check-circle" style="width: 16px; height: 16px; color: var(--accent-cyan);"></i><span>${escapeHtml(msg)}</span>`;
+      container.appendChild(toast);
+      lucide.createIcons();
+      setTimeout(() => {
+        toast.remove();
+      }, 2500);
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast("Recommendation copied to clipboard");
+      }).catch(err => {
+        showToast("Copied text to clipboard");
+      });
+    }
+
+    function resetWorkflowSteps() {
+      stepReview.className = "pipeline-step active";
+      stepExplain.className = "pipeline-step";
+      stepGround.className = "pipeline-step";
+      stepFix.className = "pipeline-step";
+      stepVerify.className = "pipeline-step";
+      verifyResultContainer.innerHTML = '';
+    }
+
+    function markWorkflowStep(stepName) {
+      if (stepName === 'review') {
+        stepReview.className = "pipeline-step completed";
+        stepExplain.className = "pipeline-step active";
+      } else if (stepName === 'explain') {
+        stepExplain.className = "pipeline-step completed";
+        stepGround.className = "pipeline-step active";
+      } else if (stepName === 'ground') {
+        stepGround.className = "pipeline-step completed";
+        stepFix.className = "pipeline-step active";
+      } else if (stepName === 'fix') {
+        stepFix.className = "pipeline-step completed";
+        stepVerify.className = "pipeline-step active";
+      } else if (stepName === 'verify') {
+        stepReview.className = "pipeline-step completed";
+        stepExplain.className = "pipeline-step completed";
+        stepGround.className = "pipeline-step completed";
+        stepFix.className = "pipeline-step completed";
+        stepVerify.className = "pipeline-step completed";
+      }
+    }
+
+    // Submit Review API call (REVIEW stage)
+    async function submitReview() {
+      const artefact = codeEditor.value.trim();
+      if (!artefact) {
+        showError("Please paste or type code before submitting a review.");
+        return;
+      }
+
+      hideError();
+      setLoadingState(true);
+      resetWorkflowSteps();
+      findingState = {};
+
+      const requestBody = {
+        artefact: artefact,
+        language: languageSelect.value,
+        context: contextInput.value.trim() || undefined
+      };
+
+      try {
+        const response = await fetch('/api/v1/review', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.detail || `Server returned status ${response.status}`);
+        }
+
+        const data = await response.json();
+        currentFindings = data.findings || [];
+        const capturedCode = artefact;
+        currentFindings.forEach((_, i) => {
+          findingState[i] = { originalCode: capturedCode, proposedFix: null, fixApplied: false, verified: false };
+        });
+        renderResults(data);
+        markWorkflowStep('review');
+
+      } catch (err) {
+        showError(err.message || "Failed to communicate with VeriForge Review API.");
+      } finally {
+        setLoadingState(false);
+      }
+    }
+
+    function setLoadingState(isLoading) {
+      reviewBtn.disabled = isLoading;
+      if (isLoading) {
+        reviewBtn.innerHTML = `
+          <div class="spinner" style="width: 18px; height: 18px; border-width: 2px;"></div>
+          <span>Analyzing Code...</span>
+        `;
+        statusIndicator.textContent = "Processing artefact...";
+        resultsContainer.innerHTML = `
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <p style="font-weight: 500;">Review engine analyzing snippet...</p>
+            <p style="font-size: 0.8rem; color: var(--text-dim);">Running diagnostic security checks & plain language synthesis</p>
+          </div>
+        `;
+      } else {
+        reviewBtn.innerHTML = `
+          <i data-lucide="zap" style="width: 18px; height: 18px;"></i>
+          <span>Review Code</span>
+        `;
+        lucide.createIcons();
+      }
+    }
+
+    function showError(msg) {
+      errorMessage.textContent = msg;
+      errorBanner.style.display = 'flex';
+      lucide.createIcons();
+    }
+
+    function hideError() {
+      errorBanner.style.display = 'none';
+    }
+
+    function renderResults(data) {
+      const findings = data.findings || [];
+      statusIndicator.textContent = `${findings.length} finding(s) returned`;
+
+      // Summary counts
+      summaryBar.style.display = 'grid';
+      const counts = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
+      findings.forEach(f => {
+        const sev = (f.severity || 'info').toLowerCase();
+        if (counts[sev] !== undefined) counts[sev]++;
+      });
+
+      document.getElementById('cntCritical').textContent = counts.critical;
+      document.getElementById('cntHigh').textContent = counts.high;
+      document.getElementById('cntMedium').textContent = counts.medium;
+      document.getElementById('cntLow').textContent = counts.low;
+      document.getElementById('cntInfo').textContent = counts.info;
+
+      if (findings.length === 0) {
+        resultsContainer.innerHTML = `
+          <div class="empty-state">
+            <i data-lucide="check-circle" style="color: var(--sev-info);"></i>
+            <p style="font-weight: 600; color: var(--text-main);">No issues detected</p>
+            <p style="font-size: 0.8rem;">The review engine detected no vulnerabilities or flaws in this snippet.</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      let html = `<div class="findings-container">`;
+      
+      findings.forEach((f, idx) => {
+        const sev = (f.severity || 'info').toLowerCase();
+        
+        html += `
+          <div class="finding-card severity-${sev}" id="finding-card-${idx}">
+            <div class="card-header">
+              <div class="card-title-group">
+                <span class="sev-pill ${sev}">${sev}</span>
+                <span class="category-pill">${escapeHtml(f.category || 'general')}</span>
+                <span class="location-pill">${escapeHtml(f.location || 'global')}</span>
+                <span class="card-title">${escapeHtml(f.title || 'Finding')}</span>
+              </div>
+            </div>
+
+            <!-- Workflow Action Bar -->
+            <div class="card-actions-bar">
+              <button type="button" class="action-btn" id="btn-explain-${idx}" onclick="toggleExplain(${idx})">
+                <i data-lucide="book-open" style="width: 14px; height: 14px;"></i>
+                <span>Explain</span>
+              </button>
+              <button type="button" class="action-btn" id="btn-ground-${idx}" onclick="toggleGround(${idx})">
+                <i data-lucide="crosshair" style="width: 14px; height: 14px;"></i>
+                <span>Ground</span>
+              </button>
+              <button type="button" class="action-btn" id="btn-fix-${idx}" onclick="toggleFix(${idx})">
+                <i data-lucide="wrench" style="width: 14px; height: 14px;"></i>
+                <span>Fix</span>
+              </button>
+              <button type="button" class="action-btn btn-verify-action" id="btn-verify-${idx}" onclick="runVerify(${idx})" disabled title="Apply the proposed fix first">
+                <i data-lucide="check-circle-2" style="width: 14px; height: 14px;"></i>
+                <span>Verify Fix</span>
+              </button>
+            </div>
+
+            <div class="card-body">
+              <p class="finding-desc">${escapeHtml(f.description)}</p>
+
+              <!-- Dynamic Action Panels -->
+              <div id="panel-explain-${idx}" style="display: none;"></div>
+              <div id="panel-ground-${idx}" style="display: none;"></div>
+              <div id="panel-fix-${idx}" style="display: none;"></div>
+              <div id="panel-verify-${idx}"></div>
+
+              <!-- Default Why It Matters -->
+              <div class="callout-box callout-why">
+                <div class="callout-header">
+                  <i data-lucide="alert-circle" style="width: 14px; height: 14px;"></i>
+                  <span>Why It Matters (Impact)</span>
+                </div>
+                <div>${escapeHtml(f.why_it_matters)}</div>
+              </div>
+
+              <!-- Default Verification Question -->
+              <div class="callout-box callout-verify">
+                <div class="callout-header">
+                  <i data-lucide="help-circle" style="width: 14px; height: 14px;"></i>
+                  <span>Verification Question</span>
+                </div>
+                <div>${escapeHtml(f.verification_question)}</div>
+              </div>
+
+            </div>
+          </div>
+        `;
+      });
+
+      html += `</div>`;
+      resultsContainer.innerHTML = html;
+      lucide.createIcons();
+    }
+
+    // 2. EXPLAIN STAGE ACTION
+    function toggleExplain(idx) {
+      const panel = document.getElementById(`panel-explain-${idx}`);
+      const btn = document.getElementById(`btn-explain-${idx}`);
+      const finding = currentFindings[idx];
+
+      if (panel.style.display === 'flex') {
+        panel.style.display = 'none';
+        btn.classList.remove('active');
+      } else {
+        panel.style.display = 'flex';
+        panel.className = 'callout-box callout-explain';
+        
+        let explainText = `
+          <div class="callout-header">
+            <i data-lucide="book-open" style="width: 14px; height: 14px;"></i>
+            <span>Detailed Student/Developer Explanation</span>
+          </div>
+          <div style="font-size: 0.84rem; line-height: 1.6; display: flex; flex-direction: column; gap: 0.4rem;">
+            <p><strong>What is wrong:</strong> ${escapeHtml(finding.description)}</p>
+            <p><strong>Why it is dangerous:</strong> ${escapeHtml(finding.why_it_matters)}</p>
+            <p><strong>Potential Attacker Impact:</strong> An attacker accessing source control or compiled artifacts could exploit this vulnerability to leak secrets, manipulate execution flow, or execute arbitrary code.</p>
+            <p><strong>Developer Takeaway:</strong> ${escapeHtml(finding.verification_question)}</p>
+          </div>
+        `;
+        panel.innerHTML = explainText;
+        btn.classList.add('active');
+        markWorkflowStep('explain');
+        lucide.createIcons();
+      }
+    }
+
+    // 3. GROUND STAGE ACTION
+    function toggleGround(idx) {
+      const panel = document.getElementById(`panel-ground-${idx}`);
+      const btn = document.getElementById(`btn-ground-${idx}`);
+      const finding = currentFindings[idx];
+
+      if (panel.style.display === 'flex') {
+        panel.style.display = 'none';
+        btn.classList.remove('active');
+      } else {
+        panel.style.display = 'flex';
+        panel.className = 'callout-box callout-ground';
+
+        const codeText = codeEditor.value;
+        const lines = codeText.split('\n');
+        
+        // Extract line number
+        let lineNum = 1;
+        const match = (finding.location || '').match(/line\s*(\d+)/i);
+        if (match) lineNum = parseInt(match[1], 10);
+        
+        const targetLineCode = lines[lineNum - 1] || lines[0] || codeText;
+
+        let groundText = `
+          <div class="callout-header">
+            <i data-lucide="crosshair" style="width: 14px; height: 14px;"></i>
+            <span>Concrete Evidence Grounding</span>
+          </div>
+          <div style="font-size: 0.82rem;">
+            <div><strong>Location:</strong> Line ${lineNum} inside submitted artefact</div>
+            <div class="ground-line-box">Line ${lineNum}: ${escapeHtml(targetLineCode.trim())}</div>
+            <div style="margin-top: 0.35rem; color: var(--text-muted);">
+              <strong>Trigger Evidence:</strong> This line matches pattern detection for ${escapeHtml(finding.title)} (${escapeHtml(finding.category)}).
+            </div>
+          </div>
+        `;
+        panel.innerHTML = groundText;
+        btn.classList.add('active');
+        markWorkflowStep('ground');
+        lucide.createIcons();
+
+        // Highlight line in textarea
+        highlightCodeLine(lineNum);
+      }
+    }
+
+    function highlightCodeLine(lineNum) {
+      const text = codeEditor.value;
+      const lines = text.split('\n');
+      let startPos = 0;
+      for (let i = 0; i < lineNum - 1 && i < lines.length; i++) {
+        startPos += lines[i].length + 1;
+      }
+      const endPos = startPos + (lines[lineNum - 1] ? lines[lineNum - 1].length : 0);
+      
+      codeEditor.focus();
+      codeEditor.setSelectionRange(startPos, endPos);
+    }
+
+    // 4. FIX STAGE ACTION
+    function toggleFix(idx) {
+      const panel = document.getElementById(`panel-fix-${idx}`);
+      const btn = document.getElementById(`btn-fix-${idx}`);
+      const finding = currentFindings[idx];
+      const state = findingState[idx] || {};
+
+      if (panel.style.display === 'flex') {
+        panel.style.display = 'none';
+        btn.classList.remove('active');
+      } else {
+        panel.style.display = 'flex';
+        panel.className = 'callout-box callout-fix';
+
+        // Use the code that was present when Review was run as the canonical "original"
+        const originalCode = state.originalCode || codeEditor.value;
+        // Generate proposed fix only once; reuse if already generated
+        if (!state.proposedFix) {
+          state.proposedFix = generateProposedFixCode(originalCode, finding);
+          findingState[idx] = state;
+        }
+        const proposedFixCode = state.proposedFix;
+
+        const applyLabel = state.fixApplied
+          ? '<span style="color:var(--sev-info); font-size:0.75rem;">✓ Fix already applied to editor</span>'
+          : `<button type="button" class="btn-apply-fix" onclick="applyFixCode(${idx})">
+               <i data-lucide="check" style="width: 14px; height: 14px;"></i>
+               <span>Apply Fix to Code Editor</span>
+             </button>`;
+
+        let fixText = `
+          <div class="callout-header">
+            <div style="display: flex; align-items: center; gap: 0.35rem;">
+              <i data-lucide="wrench" style="width: 14px; height: 14px;"></i>
+              <span>Proposed Remediation Fix</span>
+            </div>
+          </div>
+          <div class="diff-container">
+            <div style="font-size: 0.75rem; font-weight: 600; color: var(--sev-critical);">CURRENT CODE</div>
+            <div class="diff-box diff-current">${escapeHtml(originalCode)}</div>
+
+            <div style="font-size: 0.75rem; font-weight: 600; color: var(--sev-info);">PROPOSED FIX</div>
+            <div class="diff-box diff-proposed">${escapeHtml(proposedFixCode)}</div>
+
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">
+              ${escapeHtml(finding.recommendation)}
+            </div>
+
+            ${applyLabel}
+          </div>
+        `;
+        panel.innerHTML = fixText;
+        btn.classList.add('active');
+        // Do NOT mark workflow step 'fix' yet — only after Apply Fix
+        lucide.createIcons();
+      }
+    }
+
+    function generateProposedFixCode(code, finding) {
+      const title = (finding.title || '').toLowerCase();
+      
+      if (title.includes('credential') || title.includes('secret') || title.includes('password')) {
+        if (code.includes('password =') || code.includes('api_key =')) {
+          return code
+            .replace(/password\s*=\s*["\'][^"\']+["\']/, 'import os\n\npassword = os.getenv("PASSWORD")')
+            .replace(/api_key\s*=\s*["\'][^"\']+["\']/, 'import os\n\napi_key = os.getenv("API_KEY")');
+        }
+        return `import os\n\n# Loaded safely from environment variable\npassword = os.getenv("PASSWORD")\nprint(password)`;
+      }
+
+      if (title.includes('eval') || title.includes('unsafe code execution')) {
+        return code.replace(/eval\s*\((.*?)\)/g, 'Number($1) /* Safely parse numeric input */');
+      }
+
+      if (title.includes('except')) {
+        return code.replace(/except\s*:/g, 'except Exception as e: # Catch specific exception\n        logging.error(f"Error: {e}")');
+      }
+
+      return `# Refactored code snippet\n${code}`;
+    }
+
+    function applyFixCode(idx) {
+      const state = findingState[idx];
+      if (!state || !state.proposedFix) return;
+
+      // Write the proposed fix into the editor
+      codeEditor.value = state.proposedFix;
+      codeEditor.dispatchEvent(new Event('input'));
+
+      // Mark this finding's fix as applied
+      state.fixApplied = true;
+      findingState[idx] = state;
+
+      // Enable the Verify Fix button for this finding
+      const verifyBtn = document.getElementById(`btn-verify-${idx}`);
+      if (verifyBtn) {
+        verifyBtn.disabled = false;
+        verifyBtn.title = 'Verify that the fix resolved the issue';
+      }
+
+      // Update the Fix panel to show "already applied" state
+      toggleFix(idx);  // close
+      toggleFix(idx);  // reopen with updated label
+
+      markWorkflowStep('fix');
+      showToast('✓ Fix applied to code editor — click Verify Fix to confirm.');
+    }
+
+    // 5. VERIFY STAGE ACTION
+    async function runVerify(idx) {
+      const finding = currentFindings[idx];
+      const state = findingState[idx] || {};
+
+      // Guard: must have applied the fix first
+      if (!state.fixApplied) {
+        showError('Apply the proposed fix before verifying.');
+        return;
+      }
+
+      // Always verify the CURRENT editor contents (which holds the applied fix)
+      const fixedCode = codeEditor.value.trim();
+
+      if (!fixedCode) {
+        showError('Code editor is empty. Cannot run verification.');
+        return;
+      }
+
+      hideError();
+      statusIndicator.textContent = 'Verifying fix against review engine...';
+
+      // Show spinner inside the finding's verify panel
+      const verifyPanel = document.getElementById(`panel-verify-${idx}`);
+      if (verifyPanel) {
+        verifyPanel.innerHTML = `<div style="padding:0.5rem 0; color:var(--text-muted); font-size:0.8rem; display:flex; align-items:center; gap:0.4rem;"><div class="spinner" style="width:14px;height:14px;border-width:2px;"></div> Running review engine on fixed code...</div>`;
+      }
+
+      try {
+        const response = await fetch('/api/v1/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            original_code: state.originalCode || '',
+            fixed_code: fixedCode,
+            original_finding_title: finding.title,
+            original_finding_id: finding.id || null,
+            language: languageSelect.value
+          })
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.detail || `Server status ${response.status}`);
+        }
+
+        const data = await response.json();
+        state.verified = true;
+        findingState[idx] = state;
+
+        let verifyHtml = '';
+        if (data.is_resolved) {
+          verifyHtml = `
+            <div class="verify-result-box verify-resolved" style="margin-top:0.5rem;">
+              <i data-lucide="check-circle" style="width: 20px; height: 20px; color: var(--sev-info);"></i>
+              <div>
+                <div>✓ FIX VERIFIED</div>
+                <div style="font-size: 0.8rem; font-weight: 400;">${escapeHtml(finding.title)} resolved.</div>
+              </div>
+            </div>
+          `;
+          markWorkflowStep('verify');
+          showToast('✓ Fix verified — issue resolved!');
+        } else {
+          // Build unrelated-findings list if any
+          let otherFindings = '';
+          if (data.new_findings && data.new_findings.length) {
+            const others = data.new_findings.filter(f => !(f.severity === 'info' && f.title.toLowerCase().includes('clear')));
+            if (others.length) {
+              otherFindings = `<div style="margin-top:0.4rem; font-size:0.75rem; color:var(--text-muted);">Other findings in fixed code: ${
+                others.map(f => escapeHtml(`[${f.severity.toUpperCase()}] ${f.title}`)).join(', ')
+              }</div>`;
+            }
+          }
+          verifyHtml = `
+            <div class="verify-result-box verify-unresolved" style="margin-top:0.5rem;">
+              <i data-lucide="alert-triangle" style="width: 20px; height: 20px; color: var(--sev-high);"></i>
+              <div>
+                <div>⚠ STILL DETECTED</div>
+                <div style="font-size: 0.8rem; font-weight: 400;">The original issue is still present in the fixed code.</div>
+                ${otherFindings}
+              </div>
+            </div>
+          `;
+          showToast('⚠ Issue still detected — review your fix.');
+        }
+
+        if (verifyPanel) {
+          verifyPanel.innerHTML = verifyHtml;
+          lucide.createIcons();
+        }
+        // Also update global verify result container
+        verifyResultContainer.innerHTML = verifyHtml;
+        lucide.createIcons();
+
+      } catch (err) {
+        if (verifyPanel) verifyPanel.innerHTML = '';
+        showError(err.message || 'Failed to verify fix with backend API.');
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>
