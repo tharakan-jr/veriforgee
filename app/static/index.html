@@ -120,12 +120,6 @@
               <h2 class="workbench-title">Evaluate AI-Generated Artefact</h2>
               <p class="workbench-subtitle">Paste your snippet below. VeriForge will analyze the code, ground any issues in authoritative rules, and provide actionable fixes.</p>
             </div>
-            <div class="preset-group">
-              <span class="preset-label">Preset:</span>
-              <button type="button" class="preset-btn active" id="btn-preset-db">Hardcoded Secret</button>
-              <button type="button" class="preset-btn" id="btn-preset-sql">SQL Injection</button>
-              <button type="button" class="preset-btn" id="btn-preset-clear">Clear</button>
-            </div>
           </div>
 
           <!-- Empty State Guidance (Shown when textarea is empty) -->
@@ -159,9 +153,9 @@
               </div>
 
               <div class="editor-stats">
-                <span id="line-counter">1 line</span>
+                <span id="line-counter">0 lines</span>
                 <span class="stats-sep">•</span>
-                <span id="char-counter">25 chars</span>
+                <span id="char-counter">0 chars</span>
               </div>
             </div>
 
@@ -169,10 +163,6 @@
             <div class="editor-body">
               <div class="gutter-lines" id="editor-gutter" aria-hidden="true">
                 <span>1</span>
-                <span>2</span>
-                <span>3</span>
-                <span>4</span>
-                <span>5</span>
               </div>
               <textarea 
                 id="code-input" 
@@ -180,7 +170,7 @@
                 rows="6" 
                 spellcheck="false" 
                 data-lenis-prevent
-                placeholder="Paste your AI-generated code here...">DB_PASSWORD = "admin123"</textarea>
+                placeholder="Paste your AI-generated code here..."></textarea>
             </div>
 
             <div class="editor-footer-bar">

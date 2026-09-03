@@ -25,9 +25,6 @@ const btnBackEditor = document.getElementById("btn-back-editor");
 const btnHeroStart = document.getElementById("btn-hero-start");
 const btnHeroDemo = document.getElementById("btn-hero-demo");
 
-const btnPresetDb = document.getElementById("btn-preset-db");
-const btnPresetSql = document.getElementById("btn-preset-sql");
-const btnPresetClear = document.getElementById("btn-preset-clear");
 
 // Loading Steps
 const loadingStageLabel = document.getElementById("loading-stage-label");
@@ -95,9 +92,6 @@ const btnOpenStandards = document.getElementById("btn-open-standards");
 const btnCloseStandards = document.getElementById("btn-close-standards");
 const standardsModalEl = document.getElementById("standards-modal-el");
 
-// Constants
-const DEFAULT_SECRET_SNIPPET = 'DB_PASSWORD = "admin123"';
-const DEFAULT_SQL_SNIPPET = `query = "SELECT * FROM users WHERE name='" + username + "'"`;
 
 // Application State
 let currentOriginalCode = "";
@@ -152,6 +146,13 @@ function smoothScrollTo(target) {
 // =============================================================================
 function updateEditorStats() {
   const text = codeInput.value;
+  if (!text) {
+    charCounter.textContent = "0 chars";
+    lineCounter.textContent = "0 lines";
+    editorGutter.innerHTML = "<span>1</span>";
+    emptyStateBanner.classList.remove("hidden");
+    return;
+  }
   const lines = text.split("\n");
   const lineCount = lines.length || 1;
   const charCount = text.length;
@@ -170,6 +171,8 @@ codeInput.addEventListener("input", () => {
   updateEditorStats();
   if (codeInput.value.trim().length > 0) {
     emptyStateBanner.classList.add("hidden");
+  } else {
+    emptyStateBanner.classList.remove("hidden");
   }
 });
 
@@ -192,63 +195,42 @@ langSelect.addEventListener("change", () => {
 });
 
 // =============================================================================
-// Presets & Hero Fast Actions
+// Hero Fast Actions
 // =============================================================================
-btnPresetDb.addEventListener("click", () => {
-  codeInput.value = DEFAULT_SECRET_SNIPPET;
-  langSelect.value = "python";
-  fileTabLabel.textContent = "artefact.py";
-  intentInput.value = "Connect application database securely";
-  updateEditorStats();
-  emptyStateBanner.classList.add("hidden");
-  smoothScrollTo(viewInput);
-});
+if (btnHeroStart) {
+  btnHeroStart.addEventListener("click", () => {
+    smoothScrollTo(viewInput);
+    codeInput.focus();
+  });
+}
 
-btnPresetSql.addEventListener("click", () => {
-  codeInput.value = DEFAULT_SQL_SNIPPET;
-  langSelect.value = "python";
-  fileTabLabel.textContent = "artefact.py";
-  intentInput.value = "User authentication query";
-  updateEditorStats();
-  emptyStateBanner.classList.add("hidden");
-  smoothScrollTo(viewInput);
-});
-
-btnPresetClear.addEventListener("click", () => {
-  codeInput.value = "";
-  intentInput.value = "";
-  updateEditorStats();
-  codeInput.focus();
-});
-
-btnHeroStart.addEventListener("click", () => {
-  smoothScrollTo(viewInput);
-  codeInput.focus();
-});
-
-btnHeroDemo.addEventListener("click", () => {
-  btnPresetDb.click();
-  btnReview.click();
-});
+if (btnHeroDemo) {
+  btnHeroDemo.addEventListener("click", () => {
+    smoothScrollTo(viewInput);
+    codeInput.focus();
+  });
+}
 
 // =============================================================================
 // View State Switcher
 // =============================================================================
 function showView(viewName) {
-  viewInput.classList.add("hidden");
-  viewLoading.classList.add("hidden");
-  viewResult.classList.add("hidden");
-  viewError.classList.add("hidden");
+  viewInput.classList.remove("active");
+  viewLoading.classList.remove("active");
+  viewResult.classList.remove("active");
+  viewError.classList.remove("active");
 
   if (viewName === "input") {
-    viewInput.classList.remove("hidden");
+    viewInput.classList.add("active");
+    updateEditorStats();
   } else if (viewName === "loading") {
-    viewLoading.classList.remove("hidden");
+    viewLoading.classList.add("active");
+    smoothScrollTo(viewLoading);
   } else if (viewName === "result") {
-    viewResult.classList.remove("hidden");
+    viewResult.classList.add("active");
     smoothScrollTo(viewResult);
   } else if (viewName === "error") {
-    viewError.classList.remove("hidden");
+    viewError.classList.add("active");
     smoothScrollTo(viewError);
   }
 }
@@ -677,28 +659,36 @@ async function runReviewPipeline(code) {
   }
 }
 
-btnReview.addEventListener("click", () => {
-  const code = codeInput.value.trim();
-  if (!code) {
-    emptyStateBanner.classList.remove("hidden");
-    codeInput.focus();
-    return;
-  }
-  runReviewPipeline(code);
-});
+if (btnReview) {
+  btnReview.addEventListener("click", () => {
+    const code = codeInput.value.trim();
+    if (!code) {
+      emptyStateBanner.classList.remove("hidden");
+      codeInput.focus();
+      return;
+    }
+    runReviewPipeline(code);
+  });
+}
 
-btnBackEditor.addEventListener("click", () => {
-  showView("input");
-  smoothScrollTo(viewInput);
-});
+if (btnBackEditor) {
+  btnBackEditor.addEventListener("click", () => {
+    showView("input");
+    smoothScrollTo(viewInput);
+  });
+}
 
-btnErrorRetry.addEventListener("click", () => {
-  btnReview.click();
-});
+if (btnErrorRetry) {
+  btnErrorRetry.addEventListener("click", () => {
+    if (btnReview) btnReview.click();
+  });
+}
 
-btnErrorBack.addEventListener("click", () => {
-  showView("input");
-});
+if (btnErrorBack) {
+  btnErrorBack.addEventListener("click", () => {
+    showView("input");
+  });
+}
 
 // =============================================================================
 // Accordion Interaction (Expandable Finding Cards)
