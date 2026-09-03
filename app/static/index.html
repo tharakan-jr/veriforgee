@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VeriForge — Turn AI-Generated Code Into Trusted Code</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient Background Glows -->
+  <div class="ambient-glow glow-top" aria-hidden="true"></div>
+  <div class="ambient-glow glow-bottom" aria-hidden="true"></div>
+
+  <!-- Global Header & Navigation -->
+  <header class="site-nav">
+    <div class="nav-container">
+      <a href="#hero" class="brand-link">
+        <div class="brand-logo" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L3 7V12C3 17.52 6.84 22.74 12 24C17.16 22.74 21 17.52 21 12V7L12 2Z" fill="url(#brand-grad)" />
+            <path d="M9 12L11 14L15 10" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <defs>
+              <linearGradient id="brand-grad" x1="3" y1="2" x2="21" y2="24" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#6366F1"/>
+                <stop stop-offset="1" stop-color="#3B82F6"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="brand-name">
+          <span>VeriForge</span>
+          <span class="brand-version">v0.1.0</span>
+        </div>
+      </a>
+
+      <nav class="nav-links" aria-label="Main Navigation">
+        <a href="#review-section" class="nav-item active">Review</a>
+        <a href="#how-it-works-modal" id="btn-open-how" class="nav-item">How It Works</a>
+        <a href="#standards-modal" id="btn-open-standards" class="nav-item">Standards</a>
+      </nav>
+
+      <div class="nav-actions">
+        <span class="status-indicator">
+          <span class="status-dot"></span>
+          <span class="status-label">Engine Ready</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-layout">
+
+    <!-- 1. HERO / LANDING SECTION -->
+    <section class="hero-section" id="hero">
+      <div class="hero-content">
+        <div class="hero-pill-badge">
+          <span class="sparkle">✦</span>
+          <span>Developer Tools & Human-AI Governance</span>
+        </div>
+
+        <h1 class="hero-headline">
+          Turn AI-Generated Code Into <span class="gradient-text">Trusted Code</span>.
+        </h1>
+
+        <p class="hero-description">
+          VeriForge identifies security risks in AI-assisted code, explains them in plain language, grounds findings in official standards, and verifies developer comprehension before deployment.
+        </p>
+
+        <div class="hero-cta-group">
+          <a href="#review-section" class="btn-hero-primary" id="btn-hero-start">
+            <span>Start Review</span>
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+            </svg>
+          </a>
+          <button type="button" class="btn-hero-secondary" id="btn-hero-demo">
+            <span>Load Demo Snippet</span>
+          </button>
+        </div>
+
+        <!-- Trust Indicators -->
+        <div class="trust-indicators-row">
+          <div class="trust-item">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#818CF8" stroke-width="2">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            <span>AI Security Analysis</span>
+          </div>
+          <div class="trust-separator">•</div>
+          <div class="trust-item">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            <span>Evidence Grounded (CWE / OWASP)</span>
+          </div>
+          <div class="trust-separator">•</div>
+          <div class="trust-item">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span>Beginner Friendly</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. CODE INPUT / REVIEW SECTION (STATE 1: INPUT) -->
+    <section class="review-workbench" id="review-section">
+
+      <!-- View 1: Input Workbench -->
+      <div id="view-input" class="workbench-view active">
+        <div class="card workbench-card">
+          <div class="workbench-header">
+            <div>
+              <h2 class="workbench-title">Evaluate AI-Generated Artefact</h2>
+              <p class="workbench-subtitle">Paste your snippet below. VeriForge will analyze the code, ground any issues in authoritative rules, and provide actionable fixes.</p>
+            </div>
+            <div class="preset-group">
+              <span class="preset-label">Preset:</span>
+              <button type="button" class="preset-btn active" id="btn-preset-db">Hardcoded Secret</button>
+              <button type="button" class="preset-btn" id="btn-preset-sql">SQL Injection</button>
+              <button type="button" class="preset-btn" id="btn-preset-clear">Clear</button>
+            </div>
+          </div>
+
+          <!-- Empty State Guidance (Shown when textarea is empty) -->
+          <div id="empty-state-banner" class="empty-state-banner hidden">
+            <div class="empty-icon">💡</div>
+            <div class="empty-text">
+              <strong>Ready to inspect your code?</strong>
+              <span>Paste your AI-generated code below and let VeriForge analyze it for security, explain the risks, and show trusted evidence.</span>
+            </div>
+          </div>
+
+          <!-- Professional Code Editor Surface -->
+          <div class="code-editor-shell">
+            <div class="editor-titlebar">
+              <div class="window-controls" aria-hidden="true">
+                <span class="w-dot dot-close"></span>
+                <span class="w-dot dot-min"></span>
+                <span class="w-dot dot-max"></span>
+              </div>
+
+              <div class="editor-meta">
+                <div class="lang-selector-wrapper">
+                  <label for="lang-select" class="sr-only">Language</label>
+                  <select id="lang-select" class="lang-selector">
+                    <option value="python" selected>Python (3.12)</option>
+                    <option value="javascript">JavaScript (Node.js)</option>
+                    <option value="sql">SQL</option>
+                  </select>
+                </div>
+                <span class="meta-filename" id="file-tab-label">artefact.py</span>
+              </div>
+
+              <div class="editor-stats">
+                <span id="line-counter">1 line</span>
+                <span class="stats-sep">•</span>
+                <span id="char-counter">25 chars</span>
+              </div>
+            </div>
+
+            <!-- Editor Gutter + Textarea -->
+            <div class="editor-body">
+              <div class="gutter-lines" id="editor-gutter" aria-hidden="true">
+                <span>1</span>
+                <span>2</span>
+                <span>3</span>
+                <span>4</span>
+                <span>5</span>
+              </div>
+              <textarea 
+                id="code-input" 
+                class="code-textarea" 
+                rows="6" 
+                spellcheck="false" 
+                data-lenis-prevent
+                placeholder="Paste your AI-generated code here...">DB_PASSWORD = "admin123"</textarea>
+            </div>
+
+            <div class="editor-footer-bar">
+              <div class="drop-hint">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                </svg>
+                <span>Paste or drop code directly into editor</span>
+              </div>
+              <div class="hotkey-hint">
+                <span>Press</span> <kbd>Ctrl</kbd> + <kbd>Enter</kbd> <span>to review</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Intent Context Field (Optional) -->
+          <div class="intent-wrapper">
+            <label for="intent-input" class="intent-label">
+              <span>Tell us what this code is supposed to do</span>
+              <span class="optional-badge">Optional Context</span>
+            </label>
+            <div class="intent-input-row">
+              <svg class="intent-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+              <input 
+                type="text" 
+                id="intent-input" 
+                class="intent-field" 
+                placeholder="e.g., Connect to database securely"
+                value="Connect to database">
+            </div>
+          </div>
+
+          <!-- Workbench Actions -->
+          <div class="workbench-actions">
+            <div class="actions-left">
+              <span class="engine-tag">Engine: VeriForge Rule & LLM Layer</span>
+            </div>
+            <button type="button" id="btn-review" class="btn-primary-review">
+              <span class="btn-icon">⚡</span>
+              <span>Review Code</span>
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. LOADING STATE -->
+      <div id="view-loading" class="workbench-view">
+        <div class="card loading-card">
+          <div class="loading-scanner-orb" aria-hidden="true">
+            <div class="scanner-ring"></div>
+            <div class="scanner-core"></div>
+          </div>
+
+          <h3 class="loading-title" id="loading-stage-label">Analyzing your code...</h3>
+          <p class="loading-sublabel">VeriForge security patterns & authoritative grounding in progress</p>
+
+          <div class="loading-steps-list">
+            <div class="review-step" id="load-step-1" data-status="pending">
+              <div class="step-indicator">○</div>
+              <div class="step-content">
+                <div class="step-title">Analyzing code syntax & structures</div>
+                <div class="step-detail">Parsing AST and identifying security-sensitive patterns</div>
+              </div>
+            </div>
+
+            <div class="review-step" id="load-step-2" data-status="pending">
+              <div class="step-indicator">○</div>
+              <div class="step-content">
+                <div class="step-title">Checking security patterns</div>
+                <div class="step-detail">Evaluating against CWE repository and OWASP rules</div>
+              </div>
+            </div>
+
+            <div class="review-step" id="load-step-3" data-status="pending">
+              <div class="step-indicator">○</div>
+              <div class="step-content">
+                <div class="step-title">Finding potential vulnerabilities</div>
+                <div class="step-detail">Determining severity, root cause, and exposure impact</div>
+              </div>
+            </div>
+
+            <div class="review-step" id="load-step-4" data-status="pending">
+              <div class="step-indicator">○</div>
+              <div class="step-content">
+                <div class="step-title">Grounding findings with trusted sources</div>
+                <div class="step-detail">Formulating plain-language explanation and verified fix</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ERROR STATE VIEW (Graceful API Error Handling) -->
+      <div id="view-error" class="workbench-view">
+        <div class="card error-card">
+          <div class="error-icon-box">⚠️</div>
+          <h3 class="error-title">Something went wrong while reviewing your code</h3>
+          <p class="error-desc" id="error-message">The review service was unable to complete the analysis. Please check your connection or try again.</p>
+          <div class="error-actions">
+            <button type="button" id="btn-error-retry" class="btn-primary-review">
+              <span>Try Again</span>
+            </button>
+            <button type="button" id="btn-error-back" class="btn-secondary-action">
+              <span>Back to Editor</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. RESULTS DASHBOARD & 5. FINDING CARDS (STATE 3: RESULT) -->
+      <div id="view-result" class="workbench-view">
+        
+        <!-- Results Top Bar -->
+        <div class="result-toolbar">
+          <button type="button" id="btn-back-editor" class="btn-secondary-action">
+            <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+            </svg>
+            <span>Review Another Snippet</span>
+          </button>
+
+          <!-- 10. VOICE EXPLANATION ACTION -->
+          <div class="voice-toolbar-action">
+            <button type="button" id="btn-voice-explain" class="btn-voice-tutor" title="Listen to AI Voice Tutor explanation">
+              <span class="voice-wave-anim" aria-hidden="true">
+                <span class="v-bar v1"></span>
+                <span class="v-bar v2"></span>
+                <span class="v-bar v3"></span>
+                <span class="v-bar v4"></span>
+              </span>
+              <span id="voice-label">🔊 Explain this to me</span>
+            </button>
+            <audio id="backend-audio-player" style="display: none;" preload="none"></audio>
+          </div>
+        </div>
+
+        <!-- Voice Status Banner (appears when voice plays or fails) -->
+        <div id="voice-alert-banner" class="voice-alert-banner hidden" aria-live="polite">
+          <span id="voice-alert-icon">ℹ️</span>
+          <span id="voice-alert-msg">Generating voice explanation...</span>
+        </div>
+
+        <!-- 4. RESULTS DASHBOARD: SECURITY OVERVIEW SUMMARY CARDS -->
+        <section class="security-overview-section" aria-label="Security Overview">
+          <div class="overview-header">
+            <h3 class="overview-heading">SECURITY OVERVIEW</h3>
+            <span class="overview-timestamp" id="overview-time">Evaluated just now</span>
+          </div>
+
+          <div class="overview-metrics-grid">
+            <div class="metric-card metric-total">
+              <div class="metric-label">Total Issues</div>
+              <div class="metric-number" id="metric-total-issues">01</div>
+              <div class="metric-foot">1 file inspected</div>
+            </div>
+
+            <div class="metric-card metric-critical">
+              <div class="metric-label">Critical</div>
+              <div class="metric-number" id="metric-critical">01</div>
+              <div class="metric-foot">Immediate fix required</div>
+            </div>
+
+            <div class="metric-card metric-high">
+              <div class="metric-label">High</div>
+              <div class="metric-number" id="metric-high">00</div>
+              <div class="metric-foot">No high issues</div>
+            </div>
+
+            <div class="metric-card metric-medium">
+              <div class="metric-label">Medium</div>
+              <div class="metric-number" id="metric-medium">00</div>
+              <div class="metric-foot">No medium issues</div>
+            </div>
+
+            <div class="metric-card metric-low">
+              <div class="metric-label">Low</div>
+              <div class="metric-number" id="metric-low">00</div>
+              <div class="metric-foot">No low issues</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 5. FINDING CARDS: EXPANDABLE SAAS FINDING CARD -->
+        <section class="findings-container" aria-label="Security Findings">
+          <article class="card finding-card-premium" id="primary-finding">
+            
+            <!-- Card Header (Always Visible) -->
+            <div class="finding-main-header">
+              <div class="finding-badge-row">
+                <span class="severity-pill critical" id="finding-severity-pill">
+                  <span class="pulse-dot"></span>
+                  <span>CRITICAL</span>
+                </span>
+                <span class="finding-location-pill" id="finding-loc-pill">Line 1 in artefact.py</span>
+                <span class="rule-ref-pill" id="finding-cwe-pill">CWE-798</span>
+              </div>
+
+              <h2 class="finding-card-title" id="finding-title">Hardcoded database password</h2>
+
+              <p class="finding-lead-explanation" id="finding-plain-explanation">
+                Your database password is written directly inside the source code. If this code is shared or uploaded to a public repository, someone could potentially obtain the password.
+              </p>
+
+              <!-- 6. CODE HIGHLIGHTING: PROBLEM CODE SNIPPET (Highlighted line) -->
+              <div class="vulnerable-snippet-box">
+                <div class="snippet-header">
+                  <span>Flagged Code Line</span>
+                  <span class="tag-flagged">Vulnerable Code</span>
+                </div>
+                <div class="snippet-content" id="finding-snippet-content">
+                  <div class="snippet-line highlighted-danger">
+                    <span class="line-num">1</span>
+                    <span class="line-code"><code><span class="tok-kw">DB_PASSWORD</span> = <span class="tok-str">"admin123"</span></code></span>
+                    <span class="line-flag-badge">⚠️ Plaintext Secret</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Expandable Sections Accordion -->
+            <div class="accordion-stack">
+
+              <!-- SECTION A: WHY THIS MATTERS (Expanded by default) -->
+              <div class="accordion-item" id="acc-matters">
+                <button type="button" class="accordion-trigger" aria-expanded="true" aria-controls="acc-matters-panel">
+                  <span class="trigger-title">
+                    <span class="trigger-icon">💡</span>
+                    <span>Why this matters</span>
+                  </span>
+                  <svg class="accordion-chevron" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                  </svg>
+                </button>
+                <div class="accordion-panel expanded" id="acc-matters-panel">
+                  <div class="panel-inner matters-inner">
+                    <div class="metaphor-callout">
+                      <div class="metaphor-icon">🔑</div>
+                      <div class="metaphor-content">
+                        <div class="metaphor-title">Security Key Metaphor</div>
+                        <p id="finding-why-matters">
+                          Think of the password as a key. Putting the key inside the source code means anyone who gets the code may also get the key.
+                        </p>
+                      </div>
+                    </div>
+                    <div class="impact-note">
+                      <strong>Real-world Impact:</strong> Once committed, hardcoded secrets remain in Git repository commit history permanently unless forcefully purged with repository rewriting tools.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- SECTION B: 7. EVIDENCE & GROUNDING (Why we flagged this) -->
+              <div class="accordion-item" id="acc-evidence">
+                <button type="button" class="accordion-trigger" aria-expanded="true" aria-controls="acc-evidence-panel">
+                  <span class="trigger-title">
+                    <span class="trigger-icon">🛡️</span>
+                    <span>Why we flagged this (Evidence & Grounding)</span>
+                    <span class="verified-badge">Verified Evidence</span>
+                  </span>
+                  <svg class="accordion-chevron" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                  </svg>
+                </button>
+                <div class="accordion-panel expanded" id="acc-evidence-panel">
+                  <div class="panel-inner evidence-inner">
+                    
+                    <!-- Grounding Pipeline Flow: Finding -> Rule -> Evidence -->
+                    <div class="grounding-pipeline">
+                      <div class="pipe-node">
+                        <span class="node-label">Finding</span>
+                        <span class="node-val" id="pipe-finding-val">Exposed Secret</span>
+                      </div>
+                      <div class="pipe-arrow">➔</div>
+                      <div class="pipe-node">
+                        <span class="node-label">Security Rule</span>
+                        <span class="node-val" id="pipe-rule-val">CWE-798 Standard</span>
+                      </div>
+                      <div class="pipe-arrow">➔</div>
+                      <div class="pipe-node active-node">
+                        <span class="node-label">Trusted Evidence</span>
+                        <span class="node-val" id="pipe-evidence-val">OWASP Top 10 A07</span>
+                      </div>
+                    </div>
+
+                    <div class="evidence-quote-box">
+                      <div class="evidence-meta-row">
+                        <span class="source-pill" id="finding-source-pill">Authoritative Guidance</span>
+                        <span class="source-ref" id="finding-source-ref">MITRE Common Weakness Enumeration CWE-798</span>
+                      </div>
+                      <blockquote class="official-quote" id="finding-evidence-text">
+                        "Secrets should not be embedded directly in source code. Use a secure secrets/environment-variable mechanism instead."
+                      </blockquote>
+                      <div class="evidence-applicability" id="finding-evidence-applicability">
+                        <strong>Why this applies:</strong> <span id="finding-applicability-text">The literal string assigned to <code>DB_PASSWORD</code> matches an unencrypted database credential stored in plaintext within source code.</span>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+
+              <!-- SECTION C: 8. RECOMMENDED FIX -->
+              <div class="accordion-item" id="acc-fix">
+                <button type="button" class="accordion-trigger" aria-expanded="true" aria-controls="acc-fix-panel">
+                  <span class="trigger-title">
+                    <span class="trigger-icon">⚡</span>
+                    <span>Recommended Fix</span>
+                    <span class="fix-avail-badge">Ready to apply</span>
+                  </span>
+                  <svg class="accordion-chevron" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                  </svg>
+                </button>
+                <div class="accordion-panel expanded" id="acc-fix-panel">
+                  <div class="panel-inner fix-inner">
+                    <div class="fix-instruction-bar">
+                      <p class="fix-guidance-text" id="finding-fix-guidance">
+                        Store the password in an environment variable instead of putting it directly in the source code.
+                      </p>
+                      <button type="button" id="btn-copy-fix-code" class="btn-copy-fix">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        <span id="copy-btn-text">Copy Fix</span>
+                      </button>
+                    </div>
+
+                    <!-- Visual Before/After Code Diff -->
+                    <div class="diff-side-by-side">
+                      <div class="diff-col diff-before">
+                        <div class="diff-col-head">
+                          <span>Unsafe Original</span>
+                          <span class="diff-tag-sub" id="diff-before-tag">- Line 1</span>
+                        </div>
+                        <pre class="diff-code-content"><code id="diff-before-code">DB_PASSWORD = "admin123"</code></pre>
+                      </div>
+
+                      <div class="diff-col diff-after">
+                        <div class="diff-col-head">
+                          <span>Recommended Safe Code</span>
+                          <span class="diff-tag-add" id="diff-after-tag">+ Remediation</span>
+                        </div>
+                        <pre class="diff-code-content"><code id="diff-after-code"><span class="tok-kw">import</span> os
+
+<span class="tok-kw">DB_PASSWORD</span> = os.environ.get(<span class="tok-str">"DB_PASSWORD"</span>)</code></pre>
+                      </div>
+                    </div>
+
+                    <div class="fix-verify-bar" style="margin-top: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                      <button type="button" id="btn-run-verify-fix" class="btn-verify-engine" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); color: #93c5fd; border-radius: 6px; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                        <span>⚡</span>
+                        <span>Verify Fix with Engine</span>
+                      </button>
+                      <span id="fix-verify-badge" class="verify-status-chip" style="display: none;">Fix Verified</span>
+                    </div>
+                    <div id="fix-verify-result-box" class="quiz-feedback hidden" style="margin-top: 10px;" aria-live="polite"></div>
+
+                    <div class="fix-pro-tip" id="finding-fix-tip">
+                      <span class="tip-label">Developer Tip:</span> Use a <code>.env</code> file on your local machine and ensure <code>.env</code> is added to your <code>.gitignore</code> so private keys never reach source control.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- SECTION D: 9. UNDERSTANDING VERIFICATION -->
+              <div class="accordion-item" id="acc-verify">
+                <button type="button" class="accordion-trigger" aria-expanded="true" aria-controls="acc-verify-panel">
+                  <span class="trigger-title">
+                    <span class="trigger-icon">🧠</span>
+                    <span>Do you understand the issue? (Verify Understanding)</span>
+                    <span class="verify-status-chip" id="verify-chip-status">Pending Check</span>
+                  </span>
+                  <svg class="accordion-chevron" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                  </svg>
+                </button>
+                <div class="accordion-panel expanded" id="acc-verify-panel">
+                  <div class="panel-inner verify-inner">
+                    <div class="quiz-container">
+                      <div class="quiz-prompt-box">
+                        <span class="quiz-question-tag">Comprehension Check</span>
+                        <h4 class="quiz-question" id="quiz-question-text">
+                          Why is storing the password directly in the source code risky?
+                        </h4>
+                      </div>
+
+                      <div class="choices-stack" id="quiz-choices-container" role="radiogroup" aria-label="Comprehension Options">
+                        <button type="button" class="quiz-choice" data-choice="A" role="radio" aria-checked="false">
+                          <span class="choice-key">A</span>
+                          <span class="choice-val">It makes the program slower</span>
+                        </button>
+
+                        <button type="button" class="quiz-choice" data-choice="B" role="radio" aria-checked="false">
+                          <span class="choice-key">B</span>
+                          <span class="choice-val">Anyone with access to the source may obtain the password</span>
+                        </button>
+
+                        <button type="button" class="quiz-choice" data-choice="C" role="radio" aria-checked="false">
+                          <span class="choice-key">C</span>
+                          <span class="choice-val">Python cannot store passwords</span>
+                        </button>
+
+                        <button type="button" class="quiz-choice" data-choice="D" role="radio" aria-checked="false">
+                          <span class="choice-key">D</span>
+                          <span class="choice-val">It increases the file size</span>
+                        </button>
+                      </div>
+
+                      <!-- In-line Verification Feedback -->
+                      <div id="quiz-feedback-box" class="quiz-feedback hidden" aria-live="polite"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </article>
+        </section>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- HOW IT WORKS MODAL -->
+  <dialog id="how-modal" class="info-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">How VeriForge Works</h3>
+        <button type="button" class="btn-modal-close" id="btn-close-how">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="flow-step">
+          <span class="step-num">1</span>
+          <div>
+            <strong>Paste AI-Generated Code</strong>
+            <p>Input snippets produced by ChatGPT, Claude, Copilot, or Cursor.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <span class="step-num">2</span>
+          <div>
+            <strong>Review & Analyze</strong>
+            <p>VeriForge inspects logic and extracts high-impact security and maintainability risks.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <span class="step-num">3</span>
+          <div>
+            <strong>Plain-Language Explanation & Grounding</strong>
+            <p>Every finding is translated into accessible English and grounded in official CWE & OWASP standards.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <span class="step-num">4</span>
+          <div>
+            <strong>Fix & Verify Comprehension</strong>
+            <p>Apply safe code alternatives and confirm your understanding so you own what AI writes.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- STANDARDS MODAL -->
+  <dialog id="standards-modal-el" class="info-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Authoritative Security Standards</h3>
+        <button type="button" class="btn-modal-close" id="btn-close-standards">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>VeriForge distinguishes between generative AI opinions and authoritative industry standards:</p>
+        <ul class="standards-list">
+          <li><strong>CWE-798</strong>: Use of Hard-coded Credentials (MITRE)</li>
+          <li><strong>CWE-89</strong>: Improper Neutralization of Special Elements used in an SQL Command</li>
+          <li><strong>OWASP Top 10</strong>: A07:2021 Identification and Authentication Failures</li>
+          <li><strong>Twelve-Factor App</strong>: Config stored strictly in environment variables</li>
+        </ul>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Global Footer -->
+  <footer class="global-footer">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <span class="footer-brand">VeriForge</span>
+        <span class="footer-copy">Turn AI-Generated Code Into Trusted Code.</span>
+      </div>
+      <div class="footer-sponsors">
+        <span>Microsoft Innovation Club VIT Chennai</span>
+        <span>•</span>
+        <span>ElevenLabs Voice Integration</span>
+        <span>•</span>
+        <span>CodeCrafters</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="lenis.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
